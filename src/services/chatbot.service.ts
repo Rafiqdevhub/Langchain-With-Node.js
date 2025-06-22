@@ -1,0 +1,105 @@
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import {
+  START,
+  END,
+  MessagesAnnotation,
+  StateGraph,
+  MemorySaver,
+} from "@langchain/langgraph";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { v4 as uuidv4 } from "uuid";
+import { config } from "../config/env";
+
+export function createChatService() {
+  const llm = new ChatGoogleGenerativeAI({
+    apiKey: config.googleApiKey,
+    model: "gemini-2.0-flash",
+    temperature: 0.7,
+  });
+
+  // A prompt template for the chatbot
+  const promptTemplate = ChatPromptTemplate.fromMessages([
+    [
+      "system",
+      "You are a helpful AI assistant. Answer all questions clearly and provide valuable information.",
+    ],
+    ["placeholder", "{messages}"],
+  ]);
+
+  // A function which calls the model
+  const callModel = async (state: typeof MessagesAnnotation.State) => {
+    const prompt = await promptTemplate.invoke(state);
+    const response = await llm.invoke(prompt);
+    return { messages: [response] };
+  };
+
+  // Define a new graph
+  const workflow = new StateGraph(MessagesAnnotation)
+    // Define the node and edge
+    .addNode("model", callModel)
+    .addEdge(START, "model")
+    .addEdge("model", END);
+
+  // Add memory
+  const memory = new MemorySaver();
+  const app = workflow.compile({ checkpointer: memory });
+
+  return {
+    async sendMessage(message: string, threadId?: string) {
+      // Create or use an existing thread ID
+      const config = {
+        configurable: {
+          thread_id: threadId || uuidv4(),
+        },
+      };
+
+      const input = [
+        {
+          role: "user",
+          content: message,
+        },
+      ];
+
+      const output = await app.invoke({ messages: input }, config);
+      const lastMessage = output.messages[output.messages.length - 1];
+
+      return {
+        response: lastMessage.content,
+        threadId: config.configurable.thread_id,
+      };
+    },
+
+    /**
+     * Continue a conversation with the chatbot
+     * @param message The message to send to the chatbot
+     * @param threadId The thread ID to continue the conversation
+     * @returns The chatbot's response
+     */
+    async continueConversation(message: string, threadId: string) {
+      if (!threadId) {
+        throw new Error("Thread ID is required to continue a conversation");
+      }
+
+      const config = {
+        configurable: {
+          thread_id: threadId,
+        },
+      };
+
+      const input = [
+        {
+          role: "user",
+          content: message,
+        },
+      ];
+
+      const output = await app.invoke({ messages: input }, config);
+      const lastMessage = output.messages[output.messages.length - 1];
+
+      return {
+        response: lastMessage.content,
+        threadId: config.configurable.thread_id,
+      };
+    },
+  };
+}
