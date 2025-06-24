@@ -9,7 +9,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "clean": "rm -rf dist || rmdir /s dist 2>nul || true",
-    "vercel-build": "npm run clean && npm run build"
+    "vercel-build": "npm run build"
   },
   "keywords": [],
   "author": "",
