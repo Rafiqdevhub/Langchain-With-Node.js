@@ -131,7 +131,37 @@ Validation error:
 
 ## Deployment
 
-This API is production-ready and can be deployed to various platforms:
+This is a backend-only API with no frontend or static file dependencies. It's designed for deployment on various platforms:
+
+- **Vercel** (recommended for serverless)
+- **Heroku**
+- **Railway**
+- **Render**
+- **DigitalOcean App Platform**
+- **Docker** (any container platform)
+
+### Quick Vercel Deployment
+
+1. Connect your GitHub repository to Vercel
+2. Set environment variables:
+   - `GOOGLE_API_KEY`
+   - `CORS_ORIGIN` (your frontend URL)
+   - `NODE_ENV=production`
+3. Deploy automatically via git push
+
+The included `vercel.json` configuration ensures proper API-only deployment.
+
+### Common Deployment Issues
+
+❌ **"public directory not found"** - This is an API-only project with no frontend. Use the provided `vercel.json` configuration.
+
+❌ **CORS errors** - Set `CORS_ORIGIN` to your frontend domain in production.
+
+❌ **Build failures** - Ensure all dependencies are installed: `npm install`
+
+✅ **Solution**: Use the deployment configurations provided in `vercel.json`, `Dockerfile`, and `Procfile`.
+
+See [`DEPLOYMENT.md`](./DEPLOYMENT.md) for detailed deployment instructions.
 
 ### Docker Deployment
 
