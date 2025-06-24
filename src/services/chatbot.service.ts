@@ -17,7 +17,6 @@ export function createChatService() {
     temperature: 0.7,
   });
 
-  // A prompt template for the chatbot
   const promptTemplate = ChatPromptTemplate.fromMessages([
     [
       "system",
@@ -26,27 +25,22 @@ export function createChatService() {
     ["placeholder", "{messages}"],
   ]);
 
-  // A function which calls the model
   const callModel = async (state: typeof MessagesAnnotation.State) => {
     const prompt = await promptTemplate.invoke(state);
     const response = await llm.invoke(prompt);
     return { messages: [response] };
   };
 
-  // Define a new graph
   const workflow = new StateGraph(MessagesAnnotation)
-    // Define the node and edge
     .addNode("model", callModel)
     .addEdge(START, "model")
     .addEdge("model", END);
 
-  // Add memory
   const memory = new MemorySaver();
   const app = workflow.compile({ checkpointer: memory });
 
   return {
     async sendMessage(message: string, threadId?: string) {
-      // Create or use an existing thread ID
       const config = {
         configurable: {
           thread_id: threadId || uuidv4(),

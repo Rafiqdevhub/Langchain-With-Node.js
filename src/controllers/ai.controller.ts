@@ -20,10 +20,8 @@ export const chatController = {
       let response;
 
       if (threadId) {
-        // Continue existing conversation
         response = await chatService.continueConversation(message, threadId);
       } else {
-        // Start new conversation
         response = await chatService.sendMessage(message);
       }
 
