@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import compression from "compression";
+import rateLimit from "express-rate-limit";
 import { config } from "./config/env";
 import aiRoutes from "./routes/ai.routes";
 
@@ -16,19 +17,80 @@ app.use(
   })
 );
 
-app.use(compression());
-app.use(express.json({ limit: "1mb" }));
+// Performance middlewares
+app.use(compression()); // Compress responses
+app.use(express.json({ limit: "1mb" })); // Limit payload size
+
+// Rate limiting
+const generalLimiter = rateLimit({
+  windowMs: config.rateLimits.windowMs,
+  max: config.rateLimits.generalMax,
+  message: {
+    error: "Too many requests",
+    message: "Too many requests from this IP, please try again later.",
+  },
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
+// Stricter rate limiting for AI endpoints
+const aiLimiter = rateLimit({
+  windowMs: config.rateLimits.windowMs, // 15 minutes by default
+  max:
+    config.nodeEnv === "production"
+      ? config.rateLimits.aiMaxProd
+      : config.rateLimits.aiMaxDev,
+  message: {
+    error: "AI rate limit exceeded",
+    message: "Too many AI requests from this IP, please try again later.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Daily rate limiter for AI endpoints (50 requests per day)
+const aiDailyLimiter = rateLimit({
+  windowMs: config.rateLimits.dailyWindowMs, // 24 hours
+  max: config.rateLimits.aiDailyMax, // 50 requests per day
+  message: {
+    error: "Daily AI limit exceeded",
+    message: `You have exceeded your daily limit of ${config.rateLimits.aiDailyMax} AI requests. Please try again tomorrow or contact support for additional quota.`,
+    dailyLimit: config.rateLimits.aiDailyMax,
+    resetTime: "24 hours from first request",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    // Use IP + date to create daily buckets
+    const today = new Date().toISOString().split("T")[0];
+    return `${req.ip}-${today}`;
+  },
+});
+
+// Apply general rate limiting to all requests
+app.use(generalLimiter);
 
 app.get("/", (req, res) => {
   res.json({
     status: "API is running",
     version: "1.0.0",
     endpoints: ["/api/ai/chat"],
+    rateLimits: {
+      general: `${config.rateLimits.generalMax} requests per ${
+        config.rateLimits.windowMs / 60000
+      } minutes`,
+      ai: `${
+        config.nodeEnv === "production"
+          ? config.rateLimits.aiMaxProd
+          : config.rateLimits.aiMaxDev
+      } requests per ${config.rateLimits.windowMs / 60000} minutes`,
+      aiDaily: `${config.rateLimits.aiDailyMax} AI requests per day`,
+    },
   });
 });
 
-// AI Route
-app.use("/api/ai", aiRoutes);
+// AI Routes with both regular and daily rate limiting
+app.use("/api/ai", aiDailyLimiter, aiLimiter, aiRoutes);
 
 app.use((req, res) => {
   res.status(404).json({

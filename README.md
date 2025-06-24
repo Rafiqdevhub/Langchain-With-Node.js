@@ -1,45 +1,78 @@
-# LangChain Chatbot API with Google Gemini Node.js(typescript)
+# LangChain Chatbot API with Google Gemini
 
-This project implements a RESTful API for a chatbot using LangChain and Google's Gemini AI model.
-It's designed to be used as a backend service for frontend applications like React.
+A production-ready RESTful API for a chatbot using LangChain and Google's Gemini AI model. This backend service is designed for integration with frontend applications like React, with robust security, rate limiting, and error handling.
 
 ## Features
 
-- Express.js RESTful API server
-- LangChain integration with Google Gemini
-- Conversation memory/history support
-- CORS support for frontend integration
-- Stateless design with conversation tracking
+### Core Functionality
 
-## Setup
+- **LangChain integration** with Google Gemini AI
+- **Conversation memory/history** support with thread tracking
+- **Stateless design** with persistent conversation continuity
+- **RESTful API** with clear error responses
 
-1. Clone this repository
-2. Install dependencies:
-   ```
-   npm install
-   ```
-3. Create a `.env` file in the project root with the following content:
-   ```
-   PORT=3000
-   GOOGLE_API_KEY=your_google_api_key_here
-   ```
-4. Replace `your_google_api_key_here` with your actual Google AI API key
+### Security & Performance
 
-## Running the Application
+- **Helmet.js** for security headers
+- **CORS** protection with configurable origins
+- **Compression** middleware for response optimization
+- **Payload size limits** (1MB default)
+- **Multi-tier rate limiting**:
+  - General API: 100 requests per 15 minutes per IP
+  - AI endpoints: 20 (production) / 50 (development) requests per 15 minutes per IP
+  - Daily AI limit: 50 requests per day per IP
+- **Graceful shutdown** handling
+- **Robust error handling** with environment-aware responses
 
-Start the development server with:
+### Production Ready
 
+- **Environment-based configuration** via `.env` files
+- **TypeScript** for type safety
+- **Docker support** with Dockerfile and docker-compose
+- **Multiple deployment options** (Heroku, Railway, Docker, etc.)
+- **Health check endpoint** with rate limit status
+- **Comprehensive documentation** (API docs, deployment guide)
+
+## Quick Start
+
+### Prerequisites
+
+- Node.js (v16 or higher)
+- npm or yarn
+- Google AI API key ([Get one here](https://makersuite.google.com/app/apikey))
+
+## API Reference
+
+### Health Check
+
+```http
+GET /
 ```
-npm run dev
+
+Returns API status and rate limit information.
+
+**Response:**
+
+```json
+{
+  "status": "API is running",
+  "version": "1.0.0",
+  "endpoints": ["/api/ai/chat"],
+  "rateLimits": {
+    "general": "100 requests per 15 minutes",
+    "ai": "20 requests per 15 minutes",
+    "aiDaily": "50 AI requests per day"
+  }
+}
 ```
 
-The server will start on http://localhost:5000 (or the port specified in your .env file).
+### Chat with AI
 
-## API Endpoints
+```http
+POST /api/ai/chat
+```
 
-### POST /api/ai/chat
-
-Send a message to the chatbot.
+Send a message to the chatbot with optional conversation continuity.
 
 **Request Body:**
 
@@ -59,41 +92,130 @@ Send a message to the chatbot.
 }
 ```
 
-## Frontend Integration
+**Rate Limits:**
 
-To use this API with a frontend application like React:
+- **General**: 100 requests per 15 minutes per IP
+- **AI Endpoint**: 20 (prod) / 50 (dev) requests per 15 minutes per IP
+- **Daily AI Limit**: 50 requests per day per IP
 
-```javascript
-// Example React code to call the API
-const sendMessage = async (message, threadId = null) => {
-  try {
-    const response = await fetch("http://localhost:5000/api/ai/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ message, threadId }),
-    });
+**Error Responses:**
 
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error("Error:", error);
-  }
-};
+Rate limit exceeded:
 
-// Example usage
-const handleSubmit = async (message) => {
-  const response = await sendMessage(message, currentThreadId);
-  // Update UI with response.message
-  // Store response.threadId for conversation continuity
-};
+```json
+{
+  "error": "AI rate limit exceeded",
+  "message": "Too many AI requests from this IP, please try again later."
+}
 ```
+
+Daily limit exceeded:
+
+```json
+{
+  "error": "Daily AI limit exceeded",
+  "message": "You have exceeded your daily limit of 50 AI requests. Please try again tomorrow or contact support for additional quota.",
+  "dailyLimit": 50,
+  "resetTime": "24 hours from first request"
+}
+```
+
+Validation error:
+
+```json
+{
+  "error": "Validation Error",
+  "message": "Message is required"
+}
+```
+
+## Deployment
+
+This API is production-ready and can be deployed to various platforms:
+
+### Docker Deployment
+
+```bash
+# Build and run with Docker
+docker build -t langchain-api .
+docker run -p 5000:5000 --env-file .env langchain-api
+
+# Or use docker-compose
+docker-compose up -d
+```
+
+### Platform Deployment
+
+The project includes configuration files for popular hosting platforms:
+
+- **Heroku**: `Procfile` included
+- **Railway/Render**: Works out of the box
+- **Vercel/Netlify**: Serverless deployment ready
+- **AWS/GCP**: Container deployment ready
+
+See [`DEPLOYMENT.md`](./DEPLOYMENT.md) for detailed deployment instructions.
+
+### Environment Variables for Production
+
+```env
+NODE_ENV=production
+PORT=5000
+GOOGLE_API_KEY=your_production_api_key
+CORS_ORIGIN=https://yourdomain.com
+
+# Optional rate limiting overrides
+RATE_LIMIT_GENERAL_MAX=200
+RATE_LIMIT_AI_MAX_PROD=30
+RATE_LIMIT_AI_DAILY_MAX=100
+```
+
+## Configuration
+
+All configuration is handled through environment variables with sensible defaults:
+
+| Variable                  | Default       | Description                   |
+| ------------------------- | ------------- | ----------------------------- |
+| `PORT`                    | `5000`        | Server port                   |
+| `NODE_ENV`                | `development` | Environment mode              |
+| `GOOGLE_API_KEY`          | _required_    | Google AI API key             |
+| `CORS_ORIGIN`             | `*` (dev)     | Allowed CORS origins          |
+| `RATE_LIMIT_WINDOW_MS`    | `900000`      | Rate limit window (15 min)    |
+| `RATE_LIMIT_GENERAL_MAX`  | `100`         | General requests per window   |
+| `RATE_LIMIT_AI_MAX_PROD`  | `20`          | AI requests per window (prod) |
+| `RATE_LIMIT_AI_MAX_DEV`   | `50`          | AI requests per window (dev)  |
+| `RATE_LIMIT_AI_DAILY_MAX` | `50`          | AI requests per day           |
+
+## Architecture
+
+```
+src/
+├── config/
+│   └── env.ts              # Environment configuration
+├── routes/
+│   └── ai.routes.ts        # AI chat endpoints
+└── index.ts                # Main server file
+```
+
+**Key Design Decisions:**
+
+- **Stateless API**: No database required, conversation state managed by client
+- **Rate limiting**: Multi-tier protection against abuse
+- **Error boundaries**: Graceful error handling with detailed logging
+- **Security first**: Helmet, CORS, payload limits, and input validation
+- **Environment aware**: Different behavior for development vs production
 
 ## Technologies Used
 
-- Node.js with TypeScript
-- Express.js
-- LangChain
-- Google Gemini AI
-- UUID for conversation tracking
+- **Runtime**: Node.js with TypeScript
+- **Framework**: Express.js
+- **AI Integration**: LangChain + Google Gemini
+- **Security**: Helmet.js, CORS, express-rate-limit
+- **Performance**: Compression middleware
+- **Development**: tsx, nodemon for hot reload
+- **Deployment**: Docker, multi-platform support
+
+## Documentation
+
+- [`API_DOCS.md`](./API_DOCS.md) - Detailed API documentation
+- [`DEPLOYMENT.md`](./DEPLOYMENT.md) - Production deployment guide
+- [Environment variables](#configuration) - Configuration reference
