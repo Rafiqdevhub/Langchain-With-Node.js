@@ -89,6 +89,16 @@ app.get("/", (req, res) => {
   });
 });
 
+// Health check endpoint
+app.get("/health", (req, res) => {
+  res.json({
+    status: "healthy",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    version: "1.0.0",
+  });
+});
+
 // AI Routes with both regular and daily rate limiting
 app.use("/api/ai", aiDailyLimiter, aiLimiter, aiRoutes);
 
