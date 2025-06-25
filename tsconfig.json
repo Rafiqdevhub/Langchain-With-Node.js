@@ -17,7 +17,5 @@
     "removeComments": true,
     "allowJs": false,
     "checkJs": false
-  },
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "api"]
+  }
 }
