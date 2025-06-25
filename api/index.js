@@ -1,11 +1,12 @@
 const path = require("path");
 
 // Import the compiled Express app
-const { default: app } = require(path.join(
-  __dirname,
-  "..",
-  "dist",
-  "index.js"
-));
+try {
+  const appModule = require(path.join(__dirname, "..", "dist", "index.js"));
+  const app = appModule.default || appModule;
 
-module.exports = app;
+  module.exports = app;
+} catch (error) {
+  console.error("Error loading Express app:", error);
+  throw error;
+}
