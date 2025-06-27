@@ -29,13 +29,13 @@ const generalLimiter = rateLimit({
     error: "Too many requests",
     message: "Too many requests from this IP, please try again later.",
   },
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
 // Stricter rate limiting for AI endpoints
 const aiLimiter = rateLimit({
-  windowMs: config.rateLimits.windowMs, // 15 minutes by default
+  windowMs: config.rateLimits.windowMs,
   max:
     config.nodeEnv === "production"
       ? config.rateLimits.aiMaxProd
@@ -148,5 +148,4 @@ process.on("SIGTERM", () => {
   });
 });
 
-// Export the app for Vercel
 export default app;
