@@ -73,8 +73,15 @@ app.use(generalLimiter);
 app.get("/", (req, res) => {
   res.json({
     status: "API is running",
-    version: "1.0.0",
-    endpoints: ["/api/ai/chat"],
+    version: "2.0.0",
+    description: "AI-powered code review and chatbot service",
+    endpoints: [
+      "/api/ai/chat",
+      "/api/ai/review-text",
+      "/api/ai/review-files",
+      "/api/ai/languages",
+      "/api/ai/guidelines",
+    ],
     rateLimits: {
       general: `${config.rateLimits.generalMax} requests per ${
         config.rateLimits.windowMs / 60000
@@ -86,6 +93,14 @@ app.get("/", (req, res) => {
       } requests per ${config.rateLimits.windowMs / 60000} minutes`,
       aiDaily: `${config.rateLimits.aiDailyMax} AI requests per day`,
     },
+    features: [
+      "AI Chatbot with conversation memory",
+      "Code review for text input",
+      "Multi-file code analysis",
+      "Security vulnerability detection",
+      "Code quality assessment",
+      "Support for 25+ programming languages",
+    ],
   });
 });
 
