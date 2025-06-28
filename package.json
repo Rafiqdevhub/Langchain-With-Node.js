@@ -1,5 +1,5 @@
 {
-  "name": "node_langchain",
+  "name": "ai-code-review-chatbot",
   "version": "2.0.0",
   "description": "AI-powered code review and chatbot service",
   "main": "dist/index.js",
