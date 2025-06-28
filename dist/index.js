@@ -74,7 +74,7 @@ app.get("/", (req, res) => {
             "/api/ai/review-text",
             "/api/ai/review-files",
             "/api/ai/languages",
-            "/api/ai/guidelines"
+            "/api/ai/guidelines",
         ],
         rateLimits: {
             general: `${env_1.config.rateLimits.generalMax} requests per ${env_1.config.rateLimits.windowMs / 60000} minutes`,
@@ -89,8 +89,8 @@ app.get("/", (req, res) => {
             "Multi-file code analysis",
             "Security vulnerability detection",
             "Code quality assessment",
-            "Support for 25+ programming languages"
-        ]
+            "Support for 25+ programming languages",
+        ],
     });
 });
 // Health check endpoint

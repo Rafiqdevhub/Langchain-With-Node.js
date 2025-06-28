@@ -14,15 +14,5 @@
     "skipLibCheck": true
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"],
-  "files": [
-    "src/index.ts",
-    "src/config/env.ts",
-    "src/controllers/ai.controller.ts",
-    "src/controllers/code-review.controller.ts",
-    "src/routes/ai.routes.ts",
-    "src/services/chatbot.service.ts",
-    "src/services/code-review.service.ts",
-    "src/middleware/upload.middleware.ts"
-  ]
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
 }

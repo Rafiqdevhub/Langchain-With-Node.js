@@ -1,22 +1,26 @@
-# LangChain Chatbot API with Google Gemini
+# AI Code Review Agent with LangChain & Google Gemini
 
-A production-ready RESTful API for a chatbot using LangChain and Google's Gemini AI model. This backend service is designed for integration with frontend applications like React, with robust security, rate limiting, and error handling.
+A production-ready RESTful API for AI-powered code review and chatbot services using LangChain and Google's Gemini AI model. This backend service provides comprehensive code analysis, security vulnerability detection, and intelligent conversation capabilities.
 
 ## Features
 
 ### Core Functionality
 
+- **AI Code Review** with detailed analysis and suggestions
+- **Multi-file code analysis** supporting 25+ programming languages
+- **Security vulnerability detection** and best practices enforcement
+- **Code quality assessment** with readability and maintainability scores
 - **LangChain integration** with Google Gemini AI
 - **Conversation memory/history** support with thread tracking
-- **Stateless design** with persistent conversation continuity
-- **RESTful API** with clear error responses
+- **File upload support** (up to 10 files, 5MB each)
+- **RESTful API** with structured JSON responses
 
 ### Security & Performance
 
 - **Helmet.js** for security headers
 - **CORS** protection with configurable origins
 - **Compression** middleware for response optimization
-- **Payload size limits** (1MB default)
+- **Payload size limits** (1MB for JSON, 5MB for files)
 - **Multi-tier rate limiting**:
   - General API: 100 requests per 15 minutes per IP
   - AI endpoints: 20 (production) / 50 (development) requests per 15 minutes per IP
@@ -28,10 +32,9 @@ A production-ready RESTful API for a chatbot using LangChain and Google's Gemini
 
 - **Environment-based configuration** via `.env` files
 - **TypeScript** for type safety
-- **Docker support** with Dockerfile and docker-compose
-- **Multiple deployment options** (Heroku, Railway, Docker, etc.)
+- **Vercel deployment** optimized
 - **Health check endpoint** with rate limit status
-- **Comprehensive documentation** (API docs, deployment guide)
+- **Comprehensive API documentation**
 
 ## Quick Start
 
@@ -49,22 +52,117 @@ A production-ready RESTful API for a chatbot using LangChain and Google's Gemini
 GET /
 ```
 
-Returns API status and rate limit information.
+Returns API status, available endpoints, and rate limit information.
 
 **Response:**
 
 ```json
 {
   "status": "API is running",
-  "version": "1.0.0",
-  "endpoints": ["/api/ai/chat"],
-  "rateLimits": {
-    "general": "100 requests per 15 minutes",
-    "ai": "20 requests per 15 minutes",
-    "aiDaily": "50 AI requests per day"
+  "version": "2.0.0",
+  "description": "AI-powered code review and chatbot service",
+  "endpoints": [
+    "/api/ai/chat",
+    "/api/ai/review-text",
+    "/api/ai/review-files",
+    "/api/ai/languages",
+    "/api/ai/guidelines"
+  ],
+  "features": [
+    "AI Chatbot with conversation memory",
+    "Code review for text input",
+    "Multi-file code analysis",
+    "Security vulnerability detection",
+    "Code quality assessment",
+    "Support for 25+ programming languages"
+  ]
+}
+```
+
+### Code Review - Text Input
+
+```http
+POST /api/ai/review-text
+```
+
+Submit code as text for AI-powered review and analysis.
+
+**Request Body:**
+
+```json
+{
+  "code": "function divide(a, b) { return a / b; }",
+  "filename": "math.js",
+  "threadId": "optional-thread-id"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "summary": "Brief overview of the code analysis",
+    "issues": [
+      {
+        "type": "warning",
+        "severity": "medium",
+        "line": 1,
+        "description": "Division by zero not handled",
+        "suggestion": "Add check for b === 0"
+      }
+    ],
+    "suggestions": ["General improvement suggestions"],
+    "securityConcerns": ["Security vulnerabilities found"],
+    "codeQuality": {
+      "readability": 8,
+      "maintainability": 7,
+      "complexity": "Low"
+    },
+    "threadId": "conversation-thread-id"
   }
 }
 ```
+
+### Code Review - File Upload
+
+```http
+POST /api/ai/review-files
+Content-Type: multipart/form-data
+```
+
+Upload code files for comprehensive analysis.
+
+**Form Data:**
+
+- `files`: Code files (up to 10 files, 5MB each)
+- `threadId`: Optional thread ID for conversation continuity
+
+**Supported File Types:**
+
+- JavaScript: `.js`, `.jsx`
+- TypeScript: `.ts`, `.tsx`
+- Python: `.py`
+- Java: `.java`
+- C/C++: `.c`, `.cpp`, `.h`, `.hpp`
+- And 20+ more languages
+
+### Get Supported Languages
+
+```http
+GET /api/ai/languages
+```
+
+Returns list of supported programming languages and file types.
+
+### Get Review Guidelines
+
+```http
+GET /api/ai/guidelines
+```
+
+Returns code review criteria, severity levels, and best practices.
 
 ### Chat with AI
 
@@ -72,23 +170,14 @@ Returns API status and rate limit information.
 POST /api/ai/chat
 ```
 
-Send a message to the chatbot with optional conversation continuity.
+Send a message to the AI chatbot with optional conversation continuity.
 
 **Request Body:**
 
 ```json
 {
   "message": "Your message here",
-  "threadId": "optional-thread-id-for-conversation-continuity"
-}
-```
-
-**Response:**
-
-```json
-{
-  "message": "Response from the AI",
-  "threadId": "conversation-thread-id"
+  "threadId": "optional-thread-id"
 }
 ```
 

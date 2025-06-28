@@ -14,7 +14,7 @@ exports.codeReviewController = {
             if (!code) {
                 return res.status(400).json({
                     error: "Validation Error",
-                    message: "Code content is required"
+                    message: "Code content is required",
                 });
             }
             const result = await codeReviewService.reviewCode(code, filename, threadId);
@@ -27,7 +27,7 @@ exports.codeReviewController = {
             console.error("Code review error:", error);
             return res.status(500).json({
                 error: "Code Review Error",
-                message: "Error processing code review request"
+                message: "Error processing code review request",
             });
         }
     },
@@ -41,13 +41,13 @@ exports.codeReviewController = {
             if (!files || files.length === 0) {
                 return res.status(400).json({
                     error: "Validation Error",
-                    message: "At least one file is required"
+                    message: "At least one file is required",
                 });
             }
             // Convert uploaded files to CodeReviewFile format
-            const codeFiles = files.map(file => ({
+            const codeFiles = files.map((file) => ({
                 filename: file.originalname,
-                content: file.buffer.toString('utf8'),
+                content: file.buffer.toString("utf8"),
                 language: codeReviewService.detectLanguage(file.originalname),
             }));
             let result;
@@ -64,7 +64,7 @@ exports.codeReviewController = {
                 success: true,
                 data: {
                     ...result,
-                    filesAnalyzed: codeFiles.map(f => ({
+                    filesAnalyzed: codeFiles.map((f) => ({
                         filename: f.filename,
                         language: f.language,
                         size: f.content.length,
@@ -76,7 +76,7 @@ exports.codeReviewController = {
             console.error("File review error:", error);
             return res.status(500).json({
                 error: "File Review Error",
-                message: "Error processing file review request"
+                message: "Error processing file review request",
             });
         }
     },
@@ -85,7 +85,7 @@ exports.codeReviewController = {
      */
     async getSupportedLanguages(req, res) {
         try {
-            const languageInfo = upload_middleware_1.SUPPORTED_EXTENSIONS.map(ext => ({
+            const languageInfo = upload_middleware_1.SUPPORTED_EXTENSIONS.map((ext) => ({
                 extension: ext,
                 language: codeReviewService.detectLanguage(`example${ext}`),
             }));
@@ -103,7 +103,7 @@ exports.codeReviewController = {
             console.error("Error getting supported languages:", error);
             return res.status(500).json({
                 error: "Server Error",
-                message: "Error retrieving supported languages"
+                message: "Error retrieving supported languages",
             });
         }
     },
@@ -123,19 +123,19 @@ exports.codeReviewController = {
                         "Best practices adherence",
                         "Design patterns usage",
                         "Error handling",
-                        "Code structure and organization"
+                        "Code structure and organization",
                     ],
                     severityLevels: {
                         critical: "Critical issues that must be fixed immediately",
                         high: "Important issues that should be addressed soon",
                         medium: "Issues that should be considered for improvement",
-                        low: "Minor suggestions for enhancement"
+                        low: "Minor suggestions for enhancement",
                     },
                     issueTypes: {
                         bug: "Potential runtime errors or logic mistakes",
                         warning: "Code that might cause issues",
                         suggestion: "Recommendations for improvement",
-                        security: "Security vulnerabilities or concerns"
+                        security: "Security vulnerabilities or concerns",
                     },
                     tips: [
                         "Provide clear, descriptive variable and function names",
@@ -144,8 +144,8 @@ exports.codeReviewController = {
                         "Follow language-specific conventions",
                         "Keep functions small and focused",
                         "Validate user inputs",
-                        "Use consistent code formatting"
-                    ]
+                        "Use consistent code formatting",
+                    ],
                 },
             });
         }
@@ -153,7 +153,7 @@ exports.codeReviewController = {
             console.error("Error getting guidelines:", error);
             return res.status(500).json({
                 error: "Server Error",
-                message: "Error retrieving guidelines"
+                message: "Error retrieving guidelines",
             });
         }
     },

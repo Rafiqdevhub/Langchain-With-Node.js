@@ -23,25 +23,25 @@ function createCodeReviewService() {
 
 Your task is to thoroughly analyze the provided code and return a structured JSON response with the following format:
 
-{
+{{
   "summary": "Brief overview of the code's purpose and overall assessment",
   "issues": [
-    {
+    {{
       "type": "bug|warning|suggestion|security",
       "severity": "low|medium|high|critical",
       "line": number (if applicable),
       "description": "Detailed description of the issue",
       "suggestion": "How to fix or improve this issue"
-    }
+    }}
   ],
   "suggestions": ["General improvement suggestions"],
   "securityConcerns": ["Security vulnerabilities or concerns"],
-  "codeQuality": {
+  "codeQuality": {{
     "readability": number (1-10),
     "maintainability": number (1-10),
     "complexity": "Low|Medium|High"
-  }
-}
+  }}
+}}
 
 Focus on:
 - Potential bugs and logic errors
@@ -76,7 +76,7 @@ Be thorough but constructive in your feedback.`,
                 },
             };
             const language = filename ? this.detectLanguage(filename) : "unknown";
-            const reviewPrompt = `Please review the following ${language} code${filename ? ` from file "${filename}"` : ''}:
+            const reviewPrompt = `Please review the following ${language} code${filename ? ` from file "${filename}"` : ""}:
 
 \`\`\`${language}
 ${code}
@@ -93,7 +93,7 @@ Provide a comprehensive code review in the specified JSON format.`;
             const lastMessage = output.messages[output.messages.length - 1];
             try {
                 // Parse the JSON response from the AI
-                const contentStr = typeof lastMessage.content === 'string'
+                const contentStr = typeof lastMessage.content === "string"
                     ? lastMessage.content
                     : JSON.stringify(lastMessage.content);
                 const jsonMatch = contentStr.match(/\{[\s\S]*\}/);
@@ -109,7 +109,7 @@ Provide a comprehensive code review in the specified JSON format.`;
                 console.error("Error parsing AI response:", error);
             }
             // Fallback if JSON parsing fails
-            const contentStr = typeof lastMessage.content === 'string'
+            const contentStr = typeof lastMessage.content === "string"
                 ? lastMessage.content
                 : JSON.stringify(lastMessage.content);
             return {
@@ -131,10 +131,12 @@ Provide a comprehensive code review in the specified JSON format.`;
                     thread_id: threadId || (0, uuid_1.v4)(),
                 },
             };
-            const fileContents = files.map(file => `File: ${file.filename} (${file.language || this.detectLanguage(file.filename)})
+            const fileContents = files
+                .map((file) => `File: ${file.filename} (${file.language || this.detectLanguage(file.filename)})
 \`\`\`${file.language || this.detectLanguage(file.filename)}
 ${file.content}
-\`\`\``).join('\n\n');
+\`\`\``)
+                .join("\n\n");
             const reviewPrompt = `Please review the following code files as a cohesive project:
 
 ${fileContents}
@@ -155,7 +157,7 @@ Return your analysis in the specified JSON format.`;
             const output = await app.invoke({ messages: input }, config);
             const lastMessage = output.messages[output.messages.length - 1];
             try {
-                const contentStr = typeof lastMessage.content === 'string'
+                const contentStr = typeof lastMessage.content === "string"
                     ? lastMessage.content
                     : JSON.stringify(lastMessage.content);
                 const jsonMatch = contentStr.match(/\{[\s\S]*\}/);
@@ -170,7 +172,7 @@ Return your analysis in the specified JSON format.`;
             catch (error) {
                 console.error("Error parsing AI response:", error);
             }
-            const contentStr = typeof lastMessage.content === 'string'
+            const contentStr = typeof lastMessage.content === "string"
                 ? lastMessage.content
                 : JSON.stringify(lastMessage.content);
             return {
