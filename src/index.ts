@@ -11,7 +11,7 @@ const app = express();
 app.use(helmet());
 app.use(
   cors({
-    origin: process.env.NODE_ENV === "production" ? config.corsOrigin : "*",
+    origin: config.corsOrigins,
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
@@ -19,7 +19,21 @@ app.use(
 
 // Performance middlewares
 app.use(compression()); // Compress responses
-app.use(express.json({ limit: "1mb" })); // Limit payload size
+app.use(express.json({ limit: "1mb" })); // Parse JSON bodies
+app.use(express.urlencoded({ extended: true, limit: "1mb" })); // Parse URL-encoded bodies
+
+// Custom middleware to handle text/plain requests as JSON
+app.use(express.text({ type: "text/plain", limit: "1mb" }));
+app.use((req, res, next) => {
+  if (req.headers["content-type"] === "text/plain;charset=UTF-8" && req.body) {
+    try {
+      req.body = JSON.parse(req.body);
+    } catch (error) {
+      console.error("Failed to parse text/plain body as JSON:", error);
+    }
+  }
+  next();
+});
 
 // Rate limiting
 const generalLimiter = rateLimit({
