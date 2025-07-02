@@ -17,12 +17,10 @@ app.use(
   })
 );
 
-// Performance middlewares
-app.use(compression()); // Compress responses
-app.use(express.json({ limit: "1mb" })); // Parse JSON bodies
-app.use(express.urlencoded({ extended: true, limit: "1mb" })); // Parse URL-encoded bodies
+app.use(compression());
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
-// Custom middleware to handle text/plain requests as JSON
 app.use(express.text({ type: "text/plain", limit: "1mb" }));
 app.use((req, res, next) => {
   if (req.headers["content-type"] === "text/plain;charset=UTF-8" && req.body) {
@@ -35,53 +33,44 @@ app.use((req, res, next) => {
   next();
 });
 
-// Rate limiting
 const generalLimiter = rateLimit({
-  windowMs: config.rateLimits.windowMs,
-  max: config.rateLimits.generalMax,
+  windowMs: 24 * 60 * 60 * 1000, // 24 hours
+  max: 20, // 20 requests per 24 hours per IP
   message: {
-    error: "Too many requests",
-    message: "Too many requests from this IP, please try again later.",
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-// Stricter rate limiting for AI endpoints
-const aiLimiter = rateLimit({
-  windowMs: config.rateLimits.windowMs,
-  max:
-    config.nodeEnv === "production"
-      ? config.rateLimits.aiMaxProd
-      : config.rateLimits.aiMaxDev,
-  message: {
-    error: "AI rate limit exceeded",
-    message: "Too many AI requests from this IP, please try again later.",
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-// Daily rate limiter for AI endpoints (50 requests per day)
-const aiDailyLimiter = rateLimit({
-  windowMs: config.rateLimits.dailyWindowMs, // 24 hours
-  max: config.rateLimits.aiDailyMax, // 50 requests per day
-  message: {
-    error: "Daily AI limit exceeded",
-    message: `You have exceeded your daily limit of ${config.rateLimits.aiDailyMax} AI requests. Please try again tomorrow or contact support for additional quota.`,
-    dailyLimit: config.rateLimits.aiDailyMax,
-    resetTime: "24 hours from first request",
+    error: "Daily general limit exceeded",
+    message:
+      "You have exceeded your daily limit of 20 requests. Please try again tomorrow.",
   },
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => {
-    // Use IP + date to create daily buckets
+    // Rate limit based on IP address + date
     const today = new Date().toISOString().split("T")[0];
-    return `${req.ip}-${today}`;
+    const clientIp = req.ip || "unknown-ip";
+    return `general-${clientIp}-${today}`;
   },
 });
 
-// Apply general rate limiting to all requests
+// AI endpoints rate limiting - 5 requests per 24 hours
+const aiLimiter = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000, // 24 hours
+  max: 5, // 5 AI requests per 24 hours per IP
+  message: {
+    error: "Daily AI limit exceeded",
+    message:
+      "You have exceeded your daily limit of 5 AI requests. Please try again tomorrow.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    // Rate limit based on IP address + date
+    const today = new Date().toISOString().split("T")[0];
+    const clientIp = req.ip || "unknown-ip";
+    return `ai-${clientIp}-${today}`;
+  },
+});
+
+// Apply rate limiting to all requests
 app.use(generalLimiter);
 
 app.get("/", (req, res) => {
@@ -97,15 +86,8 @@ app.get("/", (req, res) => {
       "/api/ai/guidelines",
     ],
     rateLimits: {
-      general: `${config.rateLimits.generalMax} requests per ${
-        config.rateLimits.windowMs / 60000
-      } minutes`,
-      ai: `${
-        config.nodeEnv === "production"
-          ? config.rateLimits.aiMaxProd
-          : config.rateLimits.aiMaxDev
-      } requests per ${config.rateLimits.windowMs / 60000} minutes`,
-      aiDaily: `${config.rateLimits.aiDailyMax} AI requests per day`,
+      general: "20 requests per 24 hours",
+      ai: "5 requests per 24 hours",
     },
     features: [
       "AI Chatbot with conversation memory",
@@ -118,7 +100,6 @@ app.get("/", (req, res) => {
   });
 });
 
-// Health check endpoint
 app.get("/health", (req, res) => {
   res.json({
     status: "healthy",
@@ -128,8 +109,8 @@ app.get("/health", (req, res) => {
   });
 });
 
-// AI Routes with both regular and daily rate limiting
-app.use("/api/ai", aiDailyLimiter, aiLimiter, aiRoutes);
+// AI Routes with AI rate limiting
+app.use("/api/ai", aiLimiter, aiRoutes);
 
 app.use((req, res) => {
   res.status(404).json({

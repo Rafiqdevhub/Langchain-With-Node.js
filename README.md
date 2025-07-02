@@ -18,13 +18,13 @@ A production-ready RESTful API for AI-powered code review and chatbot services u
 ### Security & Performance
 
 - **Helmet.js** for security headers
-- **CORS** protection with configurable origins
+- **CORS** protection with configurable origins (supports multiple domains)
+- **Text/plain request support** for flexible frontend integration
 - **Compression** middleware for response optimization
 - **Payload size limits** (1MB for JSON, 5MB for files)
 - **Multi-tier rate limiting**:
-  - General API: 100 requests per 15 minutes per IP
-  - AI endpoints: 20 (production) / 50 (development) requests per 15 minutes per IP
-  - Daily AI limit: 50 requests per day per IP
+  - General API: 20 requests per 24 hours per IP
+  - AI endpoints: 5 requests per 24 hours per IP
 - **Graceful shutdown** handling
 - **Robust error handling** with environment-aware responses
 
@@ -183,9 +183,10 @@ Send a message to the AI chatbot with optional conversation continuity.
 
 **Rate Limits:**
 
-- **General**: 100 requests per 15 minutes per IP
-- **AI Endpoint**: 20 (prod) / 50 (dev) requests per 15 minutes per IP
-- **Daily AI Limit**: 50 requests per day per IP
+- **General**: 20 requests per 24 hours per IP
+- **AI Endpoints**: 5 requests per 24 hours per IP
+
+**Important**: Rate limits are strictly enforced per IP address and reset at midnight UTC daily.
 
 **Error Responses:**
 
@@ -193,19 +194,17 @@ Rate limit exceeded:
 
 ```json
 {
-  "error": "AI rate limit exceeded",
-  "message": "Too many AI requests from this IP, please try again later."
+  "error": "Daily general limit exceeded",
+  "message": "You have exceeded your daily limit of 20 requests. Please try again tomorrow."
 }
 ```
 
-Daily limit exceeded:
+AI limit exceeded:
 
 ```json
 {
   "error": "Daily AI limit exceeded",
-  "message": "You have exceeded your daily limit of 50 AI requests. Please try again tomorrow or contact support for additional quota.",
-  "dailyLimit": 50,
-  "resetTime": "24 hours from first request"
+  "message": "You have exceeded your daily limit of 5 AI requests. Please try again tomorrow."
 }
 ```
 
@@ -280,29 +279,44 @@ See [`DEPLOYMENT.md`](./DEPLOYMENT.md) for detailed deployment instructions.
 NODE_ENV=production
 PORT=5000
 GOOGLE_API_KEY=your_production_api_key
-CORS_ORIGIN=https://yourdomain.com
+CORS_ORIGINS=https://codify-omega.vercel.app,https://yourdomain.com
 
-# Optional rate limiting overrides
-RATE_LIMIT_GENERAL_MAX=200
-RATE_LIMIT_AI_MAX_PROD=30
-RATE_LIMIT_AI_DAILY_MAX=100
+# The API uses fixed daily rate limits (not configurable via env vars)
+# General API: 20 requests per 24 hours per IP
+# AI Endpoints: 5 requests per 24 hours per IP
 ```
 
 ## Configuration
 
-All configuration is handled through environment variables with sensible defaults:
+The API uses fixed daily rate limits for optimal resource management:
 
-| Variable                  | Default       | Description                   |
-| ------------------------- | ------------- | ----------------------------- |
-| `PORT`                    | `5000`        | Server port                   |
-| `NODE_ENV`                | `development` | Environment mode              |
-| `GOOGLE_API_KEY`          | _required_    | Google AI API key             |
-| `CORS_ORIGIN`             | `*` (dev)     | Allowed CORS origins          |
-| `RATE_LIMIT_WINDOW_MS`    | `900000`      | Rate limit window (15 min)    |
-| `RATE_LIMIT_GENERAL_MAX`  | `100`         | General requests per window   |
-| `RATE_LIMIT_AI_MAX_PROD`  | `20`          | AI requests per window (prod) |
-| `RATE_LIMIT_AI_MAX_DEV`   | `50`          | AI requests per window (dev)  |
-| `RATE_LIMIT_AI_DAILY_MAX` | `50`          | AI requests per day           |
+| Setting                 | Value                      | Description                          |
+| ----------------------- | -------------------------- | ------------------------------------ |
+| `PORT`                  | `5000`                     | Server port                          |
+| `NODE_ENV`              | `development`              | Environment mode                     |
+| `GOOGLE_API_KEY`        | _required_                 | Google AI API key                    |
+| `CORS_ORIGINS`          | Multiple domains supported | Comma-separated allowed CORS origins |
+| **Rate Limits (Fixed)** |                            |                                      |
+| General API             | `20 requests per 24 hours` | All endpoints per IP                 |
+| AI Endpoints            | `5 requests per 24 hours`  | AI-specific endpoints per IP         |
+| Rate Limit Reset        | `Midnight UTC daily`       | When limits reset                    |
+
+### CORS Configuration
+
+The API supports multiple frontend domains. Configure using:
+
+```env
+# Single domain
+CORS_ORIGINS=https://yourdomain.com
+
+# Multiple domains
+CORS_ORIGINS=https://codify-omega.vercel.app,http://localhost:8000,https://yourdomain.com
+```
+
+**Default allowed origins:**
+
+- `https://codify-omega.vercel.app` (production)
+- `http://localhost:8000` (development)
 
 ## Architecture
 
@@ -310,18 +324,70 @@ All configuration is handled through environment variables with sensible default
 src/
 ├── config/
 │   └── env.ts              # Environment configuration
+├── controllers/
+│   ├── ai.controller.ts    # Chat functionality
+│   └── code-review.controller.ts # Code review logic
+├── middleware/
+│   └── upload.middleware.ts # File upload handling
 ├── routes/
-│   └── ai.routes.ts        # AI chat endpoints
-└── index.ts                # Main server file
+│   └── ai.routes.ts        # API route definitions
+├── services/
+│   ├── chatbot.service.ts  # LangChain chat service
+│   └── code-review.service.ts # Code analysis service
+└── index.ts                # Main server file with rate limiting
 ```
 
 **Key Design Decisions:**
 
 - **Stateless API**: No database required, conversation state managed by client
-- **Rate limiting**: Multi-tier protection against abuse
+- **Strict daily rate limiting**: 20 general + 5 AI requests per IP per day
+- **IP-based isolation**: Each IP address gets independent rate limit counters
+- **Multiple CORS origins**: Support for multiple frontend domains
 - **Error boundaries**: Graceful error handling with detailed logging
 - **Security first**: Helmet, CORS, payload limits, and input validation
-- **Environment aware**: Different behavior for development vs production
+- **Flexible request parsing**: Supports both JSON and text/plain content types
+
+## Rate Limiting Details
+
+### Current Implementation
+
+The API implements **strict daily rate limiting** to ensure fair usage and resource protection:
+
+#### General Endpoints (20 requests/day per IP)
+
+- Root endpoint (`/`)
+- Health check (`/health`)
+- All other non-AI endpoints
+
+#### AI Endpoints (5 requests/day per IP)
+
+- `/api/ai/chat` - AI chatbot
+- `/api/ai/review-text` - Text code review
+- `/api/ai/review-files` - File upload code review
+- `/api/ai/languages` - Get supported languages
+- `/api/ai/guidelines` - Get review guidelines
+
+### Rate Limit Features
+
+- **Per-IP isolation**: Each IP address has independent counters
+- **Daily reset**: Limits reset at midnight UTC
+- **Explicit key generation**: Uses IP + date for accurate tracking
+- **Graceful error responses**: Clear messages when limits are exceeded
+- **Header information**: Standard rate limit headers included in responses
+
+### Testing Rate Limits
+
+You can test the rate limiting behavior:
+
+```bash
+# Test general endpoint (20/day limit)
+for i in {1..25}; do curl http://localhost:5000/ && echo "Request $i"; done
+
+# Test AI endpoint (5/day limit)
+for i in {1..8}; do curl -X POST http://localhost:5000/api/ai/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message":"test"}' && echo "AI Request $i"; done
+```
 
 ## Technologies Used
 
@@ -335,6 +401,43 @@ src/
 
 ## Documentation
 
+- [`FRONTEND_DEVELOPMENT_GUIDE.md`](./FRONTEND_DEVELOPMENT_GUIDE.md) - **Complete frontend integration guide**
 - [`API_DOCS.md`](./API_DOCS.md) - Detailed API documentation
 - [`DEPLOYMENT.md`](./DEPLOYMENT.md) - Production deployment guide
-- [Environment variables](#configuration) - Configuration reference
+- [Configuration](#configuration) - Environment variables reference
+
+### Frontend Integration
+
+The `FRONTEND_DEVELOPMENT_GUIDE.md` provides comprehensive instructions for building a frontend that integrates with this API, including:
+
+- Complete API endpoint documentation with examples
+- TypeScript interfaces and types
+- React hooks and implementation examples
+- Rate limiting handling strategies
+- Error handling patterns
+- File upload components
+- CORS configuration guidance
+
+## Quick Integration Example
+
+```javascript
+// Basic API client setup
+const API_BASE = "https://your-api-domain.com";
+
+// Chat with AI
+const response = await fetch(`${API_BASE}/api/ai/chat`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ message: "Hello AI!" }),
+});
+
+// Review code
+const reviewResponse = await fetch(`${API_BASE}/api/ai/review-text`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    code: 'console.log("Hello World");',
+    filename: "test.js",
+  }),
+});
+```
