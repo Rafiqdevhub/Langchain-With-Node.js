@@ -8,7 +8,7 @@ export const config = {
   corsOrigin: process.env.CORS_ORIGIN || "",
   corsOrigins: process.env.CORS_ORIGINS
     ? process.env.CORS_ORIGINS.split(",")
-    : ["https://codify-omega.vercel.app", "http://localhost:8000"],
+    : ["https://codify-omega.vercel.app", "http://localhost:3000"],
   nodeEnv: process.env.NODE_ENV || "development",
   rateLimits: {
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || "900000"),
