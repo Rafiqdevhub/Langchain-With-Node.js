@@ -262,17 +262,6 @@ docker run -p 5000:5000 --env-file .env langchain-api
 docker-compose up -d
 ```
 
-### Platform Deployment
-
-The project includes configuration files for popular hosting platforms:
-
-- **Heroku**: `Procfile` included
-- **Railway/Render**: Works out of the box
-- **Vercel/Netlify**: Serverless deployment ready
-- **AWS/GCP**: Container deployment ready
-
-See [`DEPLOYMENT.md`](./DEPLOYMENT.md) for detailed deployment instructions.
-
 ### Environment Variables for Production
 
 ```env
