@@ -2,7 +2,6 @@ import multer from "multer";
 import path from "path";
 import { Request } from "express";
 
-// Supported file extensions for code review
 const SUPPORTED_EXTENSIONS = [
   ".js",
   ".jsx",
@@ -75,5 +74,4 @@ export const uploadMiddleware = multer({
   },
 });
 
-// Export supported extensions for API documentation
 export { SUPPORTED_EXTENSIONS };

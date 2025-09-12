@@ -4,14 +4,8 @@ import { createChatService } from "../services/chatbot.service";
 const chatService = createChatService();
 
 export const chatController = {
-  /**
-   * Handle a chat request
-   * @param req Express Request
-   * @param res Express Response
-   */
   async chat(req: Request, res: Response) {
     try {
-      // Check if body exists
       if (!req.body) {
         return res.status(400).json({
           error: "Request body is missing",

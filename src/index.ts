@@ -109,7 +109,6 @@ app.get("/health", (req, res) => {
   });
 });
 
-// AI Routes with AI rate limiting
 app.use("/api/ai", aiLimiter, aiRoutes);
 
 app.use((req, res) => {

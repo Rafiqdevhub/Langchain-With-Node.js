@@ -8,9 +8,6 @@ import { SUPPORTED_EXTENSIONS } from "../middleware/upload.middleware";
 const codeReviewService = createCodeReviewService();
 
 export const codeReviewController = {
-  /**
-   * Review code submitted as text
-   */
   async reviewText(req: Request, res: Response) {
     try {
       const { code, filename, threadId } = req.body;
@@ -41,9 +38,6 @@ export const codeReviewController = {
     }
   },
 
-  /**
-   * Review uploaded code files
-   */
   async reviewFiles(req: Request, res: Response) {
     try {
       const files = req.files as Express.Multer.File[];
@@ -100,9 +94,6 @@ export const codeReviewController = {
     }
   },
 
-  /**
-   * Get supported programming languages and file types
-   */
   async getSupportedLanguages(req: Request, res: Response) {
     try {
       const languageInfo = SUPPORTED_EXTENSIONS.map((ext) => ({
@@ -128,9 +119,6 @@ export const codeReviewController = {
     }
   },
 
-  /**
-   * Get code review guidelines and best practices
-   */
   async getGuidelines(req: Request, res: Response) {
     try {
       return res.json({
