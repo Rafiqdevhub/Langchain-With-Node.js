@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { eq } from "drizzle-orm";
-import { db } from "../config/database";
-import { users } from "../models/users.model";
+import { db } from "../config/database.js";
+import { users } from "../models/users.model.js";
 
 // Environment variables
 const JWT_SECRET =

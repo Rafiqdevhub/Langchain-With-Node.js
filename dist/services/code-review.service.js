@@ -1,22 +1,16 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.createCodeReviewService = createCodeReviewService;
-const google_genai_1 = require("@langchain/google-genai");
-const langgraph_1 = require("@langchain/langgraph");
-const prompts_1 = require("@langchain/core/prompts");
-const uuid_1 = require("uuid");
-const env_1 = require("../config/env");
-const path_1 = __importDefault(require("path"));
-function createCodeReviewService() {
-    const llm = new google_genai_1.ChatGoogleGenerativeAI({
-        apiKey: env_1.config.googleApiKey,
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { START, END, MessagesAnnotation, StateGraph, MemorySaver, } from "@langchain/langgraph";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { v4 as uuidv4 } from "uuid";
+import { config } from "../config/env.js";
+import path from "path";
+export function createCodeReviewService() {
+    const llm = new ChatGoogleGenerativeAI({
+        apiKey: config.googleApiKey,
         model: "gemini-2.0-flash",
         temperature: 0.3, // Lower temperature for more consistent code analysis
     });
-    const codeReviewPrompt = prompts_1.ChatPromptTemplate.fromMessages([
+    const codeReviewPrompt = ChatPromptTemplate.fromMessages([
         [
             "system",
             `You are an expert code reviewer and software engineer with deep knowledge of multiple programming languages, security best practices, and software design patterns.
@@ -62,17 +56,17 @@ Be thorough but constructive in your feedback.`,
         const response = await llm.invoke(prompt);
         return { messages: [response] };
     };
-    const workflow = new langgraph_1.StateGraph(langgraph_1.MessagesAnnotation)
+    const workflow = new StateGraph(MessagesAnnotation)
         .addNode("model", callModel)
-        .addEdge(langgraph_1.START, "model")
-        .addEdge("model", langgraph_1.END);
-    const memory = new langgraph_1.MemorySaver();
+        .addEdge(START, "model")
+        .addEdge("model", END);
+    const memory = new MemorySaver();
     const app = workflow.compile({ checkpointer: memory });
     return {
         async reviewCode(code, filename, threadId) {
             const config = {
                 configurable: {
-                    thread_id: threadId || (0, uuid_1.v4)(),
+                    thread_id: threadId || uuidv4(),
                 },
             };
             const language = filename ? this.detectLanguage(filename) : "unknown";
@@ -128,7 +122,7 @@ Provide a comprehensive code review in the specified JSON format.`;
         async reviewMultipleFiles(files, threadId) {
             const config = {
                 configurable: {
-                    thread_id: threadId || (0, uuid_1.v4)(),
+                    thread_id: threadId || uuidv4(),
                 },
             };
             const fileContents = files
@@ -189,7 +183,7 @@ Return your analysis in the specified JSON format.`;
             };
         },
         detectLanguage(filename) {
-            const ext = path_1.default.extname(filename).toLowerCase();
+            const ext = path.extname(filename).toLowerCase();
             const languageMap = {
                 ".js": "javascript",
                 ".jsx": "javascript",

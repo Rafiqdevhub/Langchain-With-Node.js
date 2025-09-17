@@ -1,10 +1,7 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.codeReviewController = void 0;
-const code_review_service_1 = require("../services/code-review.service");
-const upload_middleware_1 = require("../middleware/upload.middleware");
-const codeReviewService = (0, code_review_service_1.createCodeReviewService)();
-exports.codeReviewController = {
+import { createCodeReviewService, } from "../services/code-review.service.js";
+import { SUPPORTED_EXTENSIONS } from "../middleware/upload.middleware.js";
+const codeReviewService = createCodeReviewService();
+export const codeReviewController = {
     async reviewText(req, res) {
         try {
             const { code, filename, threadId } = req.body;
@@ -71,14 +68,14 @@ exports.codeReviewController = {
     },
     async getSupportedLanguages(req, res) {
         try {
-            const languageInfo = upload_middleware_1.SUPPORTED_EXTENSIONS.map((ext) => ({
+            const languageInfo = SUPPORTED_EXTENSIONS.map((ext) => ({
                 extension: ext,
                 language: codeReviewService.detectLanguage(`example${ext}`),
             }));
             return res.json({
                 success: true,
                 data: {
-                    supportedExtensions: upload_middleware_1.SUPPORTED_EXTENSIONS,
+                    supportedExtensions: SUPPORTED_EXTENSIONS,
                     languages: languageInfo,
                     maxFileSize: "5MB",
                     maxFiles: 10,

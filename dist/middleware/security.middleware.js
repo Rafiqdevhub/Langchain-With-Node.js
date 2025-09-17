@@ -1,10 +1,5 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const node_1 = require("@arcjet/node");
-const arcjet_1 = __importDefault(require("../config/arcjet"));
+import { slidingWindow } from "@arcjet/node";
+import aj from "../config/arcjet.js";
 const securityMiddleware = async (req, res, next) => {
     try {
         const role = req.user?.role || "guest";
@@ -26,7 +21,7 @@ const securityMiddleware = async (req, res, next) => {
                 break;
         }
         // Create client with dynamic rate limiting
-        const client = arcjet_1.default.withRule((0, node_1.slidingWindow)({
+        const client = aj.withRule(slidingWindow({
             mode: "LIVE",
             interval: interval,
             max: limit,
@@ -69,4 +64,4 @@ const securityMiddleware = async (req, res, next) => {
         });
     }
 };
-exports.default = securityMiddleware;
+export default securityMiddleware;

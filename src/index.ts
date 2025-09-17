@@ -2,14 +2,14 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import compression from "compression";
-import { config } from "./config/env";
-import aiRoutes from "./routes/ai.routes";
-import authRoutes from "./routes/auth.routes";
+import { config } from "./config/env.js";
+import aiRoutes from "./routes/ai.routes.js";
+import authRoutes from "./routes/auth.routes.js";
 import {
   securityMiddleware,
   requestLogger,
   optionalAuthenticate,
-} from "./middleware";
+} from "./middleware/index.js";
 
 const app = express();
 

@@ -1,9 +1,6 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.chatController = void 0;
-const chatbot_service_1 = require("../services/chatbot.service");
-const chatService = (0, chatbot_service_1.createChatService)();
-exports.chatController = {
+import { createChatService } from "../services/chatbot.service.js";
+const chatService = createChatService();
+export const chatController = {
     async chat(req, res) {
         try {
             if (!req.body) {

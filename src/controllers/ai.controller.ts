@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { createChatService } from "../services/chatbot.service";
+import { createChatService } from "../services/chatbot.service.js";
 
 const chatService = createChatService();
 

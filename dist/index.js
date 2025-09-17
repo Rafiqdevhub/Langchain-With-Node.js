@@ -1,34 +1,29 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
-const cors_1 = __importDefault(require("cors"));
-const helmet_1 = __importDefault(require("helmet"));
-const compression_1 = __importDefault(require("compression"));
-const env_1 = require("./config/env");
-const ai_routes_1 = __importDefault(require("./routes/ai.routes"));
-const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
-const middleware_1 = require("./middleware");
-const app = (0, express_1.default)();
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import compression from "compression";
+import { config } from "./config/env.js";
+import aiRoutes from "./routes/ai.routes.js";
+import authRoutes from "./routes/auth.routes.js";
+import { securityMiddleware, requestLogger, optionalAuthenticate, } from "./middleware/index.js";
+const app = express();
 // Trust proxy for proper IP detection in development/production
-if (env_1.config.nodeEnv === "development") {
+if (config.nodeEnv === "development") {
     app.set("trust proxy", true);
 }
 else {
     app.set("trust proxy", 1);
 }
-app.use((0, helmet_1.default)());
-app.use((0, cors_1.default)({
-    origin: env_1.config.corsOrigins,
+app.use(helmet());
+app.use(cors({
+    origin: config.corsOrigins,
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type", "Authorization"],
 }));
-app.use((0, compression_1.default)());
-app.use(express_1.default.json({ limit: "1mb" }));
-app.use(express_1.default.urlencoded({ extended: true, limit: "1mb" }));
-app.use(express_1.default.text({ type: "text/plain", limit: "1mb" }));
+app.use(compression());
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
+app.use(express.text({ type: "text/plain", limit: "1mb" }));
 app.use((req, res, next) => {
     if (req.headers["content-type"] === "text/plain;charset=UTF-8" && req.body) {
         try {
@@ -40,11 +35,11 @@ app.use((req, res, next) => {
     }
     next();
 });
-app.use(middleware_1.requestLogger);
+app.use(requestLogger);
 // Optional authentication middleware - attempts to authenticate users but doesn't fail if no token
 // This allows the security middleware to apply different rate limits based on auth status
-app.use(middleware_1.optionalAuthenticate);
-app.use(middleware_1.securityMiddleware);
+app.use(optionalAuthenticate);
+app.use(securityMiddleware);
 app.get("/", (req, res) => {
     res.json({
         status: "API is running",
@@ -93,8 +88,8 @@ app.get("/health", (req, res) => {
         version: "2.0.0",
     });
 });
-app.use("/api/auth", auth_routes_1.default);
-app.use("/api/ai", ai_routes_1.default);
+app.use("/api/auth", authRoutes);
+app.use("/api/ai", aiRoutes);
 app.use((req, res) => {
     res.status(404).json({
         error: "Not Found",
@@ -103,7 +98,7 @@ app.use((req, res) => {
 });
 app.use((err, req, res, next) => {
     const statusCode = res.statusCode !== 200 ? res.statusCode : 500;
-    const errorDetails = env_1.config.nodeEnv === "production"
+    const errorDetails = config.nodeEnv === "production"
         ? { message: "Internal Server Error" }
         : { message: err.message, stack: err.stack };
     console.error(`[${new Date().toISOString()}] Server error occurred:`, err.message, statusCode);
@@ -112,9 +107,9 @@ app.use((err, req, res, next) => {
         ...errorDetails,
     });
 });
-const server = app.listen(env_1.config.port, () => {
-    console.log(`[${new Date().toISOString()}] Server started successfully on port ${env_1.config.port} (${env_1.config.nodeEnv.toUpperCase()})`);
-    console.log(`[${new Date().toISOString()}] Server URL: http://localhost:${env_1.config.port}`);
+const server = app.listen(config.port, () => {
+    console.log(`[${new Date().toISOString()}] Server started successfully on port ${config.port} (${config.nodeEnv.toUpperCase()})`);
+    console.log(`[${new Date().toISOString()}] Server URL: http://localhost:${config.port}`);
 });
 process.on("SIGTERM", () => {
     console.log(`[${new Date().toISOString()}] SIGTERM signal received: closing HTTP server`);
@@ -123,4 +118,4 @@ process.on("SIGTERM", () => {
         process.exit(0);
     });
 });
-exports.default = app;
+export default app;

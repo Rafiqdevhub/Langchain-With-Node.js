@@ -8,7 +8,7 @@ import {
 } from "@langchain/langgraph";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { v4 as uuidv4 } from "uuid";
-import { config } from "../config/env";
+import { config } from "../config/env.js";
 
 export function createChatService() {
   const llm = new ChatGoogleGenerativeAI({

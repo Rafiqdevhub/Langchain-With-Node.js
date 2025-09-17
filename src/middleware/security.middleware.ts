@@ -1,6 +1,6 @@
 import { slidingWindow } from "@arcjet/node";
 import { Request, Response, NextFunction } from "express";
-import aj from "../config/arcjet";
+import aj from "../config/arcjet.js";
 
 interface User {
   id?: number;

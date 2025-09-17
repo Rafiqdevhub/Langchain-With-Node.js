@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { chatController } from "../controllers/ai.controller";
-import { codeReviewController } from "../controllers/code-review.controller";
+import { chatController } from "../controllers/ai.controller.js";
+import { codeReviewController } from "../controllers/code-review.controller.js";
 
-import { uploadMiddleware } from "../middleware/upload.middleware";
+import { uploadMiddleware } from "../middleware/upload.middleware.js";
 
 const router = Router();
 

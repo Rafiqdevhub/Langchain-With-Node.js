@@ -1,18 +1,15 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.createChatService = createChatService;
-const google_genai_1 = require("@langchain/google-genai");
-const langgraph_1 = require("@langchain/langgraph");
-const prompts_1 = require("@langchain/core/prompts");
-const uuid_1 = require("uuid");
-const env_1 = require("../config/env");
-function createChatService() {
-    const llm = new google_genai_1.ChatGoogleGenerativeAI({
-        apiKey: env_1.config.googleApiKey,
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { START, END, MessagesAnnotation, StateGraph, MemorySaver, } from "@langchain/langgraph";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { v4 as uuidv4 } from "uuid";
+import { config } from "../config/env.js";
+export function createChatService() {
+    const llm = new ChatGoogleGenerativeAI({
+        apiKey: config.googleApiKey,
         model: "gemini-2.0-flash",
         temperature: 0.7,
     });
-    const promptTemplate = prompts_1.ChatPromptTemplate.fromMessages([
+    const promptTemplate = ChatPromptTemplate.fromMessages([
         [
             "system",
             "You are a helpful AI assistant. Answer all questions clearly and provide valuable information.",
@@ -24,17 +21,17 @@ function createChatService() {
         const response = await llm.invoke(prompt);
         return { messages: [response] };
     };
-    const workflow = new langgraph_1.StateGraph(langgraph_1.MessagesAnnotation)
+    const workflow = new StateGraph(MessagesAnnotation)
         .addNode("model", callModel)
-        .addEdge(langgraph_1.START, "model")
-        .addEdge("model", langgraph_1.END);
-    const memory = new langgraph_1.MemorySaver();
+        .addEdge(START, "model")
+        .addEdge("model", END);
+    const memory = new MemorySaver();
     const app = workflow.compile({ checkpointer: memory });
     return {
         async sendMessage(message, threadId) {
             const config = {
                 configurable: {
-                    thread_id: threadId || (0, uuid_1.v4)(),
+                    thread_id: threadId || uuidv4(),
                 },
             };
             const input = [

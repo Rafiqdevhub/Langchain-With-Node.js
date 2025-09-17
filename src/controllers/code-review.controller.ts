@@ -2,8 +2,8 @@ import { Request, Response } from "express";
 import {
   createCodeReviewService,
   CodeReviewFile,
-} from "../services/code-review.service";
-import { SUPPORTED_EXTENSIONS } from "../middleware/upload.middleware";
+} from "../services/code-review.service.js";
+import { SUPPORTED_EXTENSIONS } from "../middleware/upload.middleware.js";
 
 const codeReviewService = createCodeReviewService();
 

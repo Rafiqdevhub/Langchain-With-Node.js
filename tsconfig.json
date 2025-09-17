@@ -2,9 +2,9 @@
   "compilerOptions": {
     "target": "es2020",
     "lib": ["es2020"],
-    "module": "commonjs",
+    "module": "ESNext",
     "rootDir": "./src",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "outDir": "./dist",
     "allowSyntheticDefaultImports": true,

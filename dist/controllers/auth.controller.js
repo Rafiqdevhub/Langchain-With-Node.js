@@ -1,14 +1,8 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.logout = exports.changePassword = exports.updateProfile = exports.getProfile = exports.login = exports.register = void 0;
-const bcryptjs_1 = __importDefault(require("bcryptjs"));
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const drizzle_orm_1 = require("drizzle-orm");
-const database_1 = require("../config/database");
-const users_model_1 = require("../models/users.model");
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { eq } from "drizzle-orm";
+import { db } from "../config/database.js";
+import { users } from "../models/users.model.js";
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
 // Helper function to generate JWT token
 const generateToken = (userId, email) => {
@@ -17,9 +11,9 @@ const generateToken = (userId, email) => {
         email,
         role: "user",
     };
-    return jsonwebtoken_1.default.sign(payload, JWT_SECRET, { expiresIn: "7d" });
+    return jwt.sign(payload, JWT_SECRET, { expiresIn: "7d" });
 };
-const register = async (req, res) => {
+export const register = async (req, res) => {
     try {
         const { name, email, password } = req.body;
         if (!name || !email || !password) {
@@ -44,10 +38,10 @@ const register = async (req, res) => {
             });
             return;
         }
-        const existingUser = await database_1.db
+        const existingUser = await db
             .select()
-            .from(users_model_1.users)
-            .where((0, drizzle_orm_1.eq)(users_model_1.users.email, email.toLowerCase()))
+            .from(users)
+            .where(eq(users.email, email.toLowerCase()))
             .limit(1);
         if (existingUser.length > 0) {
             res.status(409).json({
@@ -57,19 +51,19 @@ const register = async (req, res) => {
             return;
         }
         const saltRounds = 12;
-        const hashedPassword = await bcryptjs_1.default.hash(password, saltRounds);
-        const newUser = await database_1.db
-            .insert(users_model_1.users)
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        const newUser = await db
+            .insert(users)
             .values({
             name: name.trim(),
             email: email.toLowerCase().trim(),
             password: hashedPassword,
         })
             .returning({
-            id: users_model_1.users.id,
-            name: users_model_1.users.name,
-            email: users_model_1.users.email,
-            created_at: users_model_1.users.created_at,
+            id: users.id,
+            name: users.name,
+            email: users.email,
+            created_at: users.created_at,
         });
         if (newUser.length === 0) {
             res.status(500).json({
@@ -97,8 +91,7 @@ const register = async (req, res) => {
         });
     }
 };
-exports.register = register;
-const login = async (req, res) => {
+export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
         if (!email || !password) {
@@ -108,10 +101,10 @@ const login = async (req, res) => {
             });
             return;
         }
-        const user = await database_1.db
+        const user = await db
             .select()
-            .from(users_model_1.users)
-            .where((0, drizzle_orm_1.eq)(users_model_1.users.email, email.toLowerCase()))
+            .from(users)
+            .where(eq(users.email, email.toLowerCase()))
             .limit(1);
         if (user.length === 0) {
             res.status(401).json({
@@ -120,7 +113,7 @@ const login = async (req, res) => {
             });
             return;
         }
-        const isValidPassword = await bcryptjs_1.default.compare(password, user[0].password);
+        const isValidPassword = await bcrypt.compare(password, user[0].password);
         if (!isValidPassword) {
             res.status(401).json({
                 error: "Authentication Error",
@@ -147,8 +140,7 @@ const login = async (req, res) => {
         });
     }
 };
-exports.login = login;
-const getProfile = async (req, res) => {
+export const getProfile = async (req, res) => {
     try {
         if (!req.user) {
             res.status(401).json({
@@ -157,16 +149,16 @@ const getProfile = async (req, res) => {
             });
             return;
         }
-        const user = await database_1.db
+        const user = await db
             .select({
-            id: users_model_1.users.id,
-            name: users_model_1.users.name,
-            email: users_model_1.users.email,
-            created_at: users_model_1.users.created_at,
-            updated_at: users_model_1.users.updated_at,
+            id: users.id,
+            name: users.name,
+            email: users.email,
+            created_at: users.created_at,
+            updated_at: users.updated_at,
         })
-            .from(users_model_1.users)
-            .where((0, drizzle_orm_1.eq)(users_model_1.users.id, req.user.id))
+            .from(users)
+            .where(eq(users.id, req.user.id))
             .limit(1);
         if (user.length === 0) {
             res.status(404).json({
@@ -187,8 +179,7 @@ const getProfile = async (req, res) => {
         });
     }
 };
-exports.getProfile = getProfile;
-const updateProfile = async (req, res) => {
+export const updateProfile = async (req, res) => {
     try {
         if (!req.user) {
             res.status(401).json({
@@ -205,18 +196,18 @@ const updateProfile = async (req, res) => {
             });
             return;
         }
-        const updatedUser = await database_1.db
-            .update(users_model_1.users)
+        const updatedUser = await db
+            .update(users)
             .set({
             name: name.trim(),
             updated_at: new Date(),
         })
-            .where((0, drizzle_orm_1.eq)(users_model_1.users.id, req.user.id))
+            .where(eq(users.id, req.user.id))
             .returning({
-            id: users_model_1.users.id,
-            name: users_model_1.users.name,
-            email: users_model_1.users.email,
-            updated_at: users_model_1.users.updated_at,
+            id: users.id,
+            name: users.name,
+            email: users.email,
+            updated_at: users.updated_at,
         });
         if (updatedUser.length === 0) {
             res.status(404).json({
@@ -237,8 +228,7 @@ const updateProfile = async (req, res) => {
         });
     }
 };
-exports.updateProfile = updateProfile;
-const changePassword = async (req, res) => {
+export const changePassword = async (req, res) => {
     try {
         if (!req.user) {
             res.status(401).json({
@@ -262,10 +252,10 @@ const changePassword = async (req, res) => {
             });
             return;
         }
-        const user = await database_1.db
+        const user = await db
             .select()
-            .from(users_model_1.users)
-            .where((0, drizzle_orm_1.eq)(users_model_1.users.id, req.user.id))
+            .from(users)
+            .where(eq(users.id, req.user.id))
             .limit(1);
         if (user.length === 0) {
             res.status(404).json({
@@ -274,7 +264,7 @@ const changePassword = async (req, res) => {
             });
             return;
         }
-        const isValidPassword = await bcryptjs_1.default.compare(currentPassword, user[0].password);
+        const isValidPassword = await bcrypt.compare(currentPassword, user[0].password);
         if (!isValidPassword) {
             res.status(401).json({
                 error: "Authentication Error",
@@ -283,14 +273,14 @@ const changePassword = async (req, res) => {
             return;
         }
         const saltRounds = 12;
-        const hashedNewPassword = await bcryptjs_1.default.hash(newPassword, saltRounds);
-        await database_1.db
-            .update(users_model_1.users)
+        const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
+        await db
+            .update(users)
             .set({
             password: hashedNewPassword,
             updated_at: new Date(),
         })
-            .where((0, drizzle_orm_1.eq)(users_model_1.users.id, req.user.id));
+            .where(eq(users.id, req.user.id));
         res.status(200).json({
             message: "Password changed successfully",
         });
@@ -302,8 +292,7 @@ const changePassword = async (req, res) => {
         });
     }
 };
-exports.changePassword = changePassword;
-const logout = async (req, res) => {
+export const logout = async (req, res) => {
     try {
         res.status(200).json({
             message: "Logout successful",
@@ -316,4 +305,3 @@ const logout = async (req, res) => {
         });
     }
 };
-exports.logout = logout;
