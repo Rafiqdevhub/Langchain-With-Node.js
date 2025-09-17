@@ -1,12 +1,8 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.codeReviewController = void 0;
 const code_review_service_1 = require("../services/code-review.service");
 const upload_middleware_1 = require("../middleware/upload.middleware");
-const logger_1 = __importDefault(require("../config/logger"));
 const codeReviewService = (0, code_review_service_1.createCodeReviewService)();
 exports.codeReviewController = {
     async reviewText(req, res) {
@@ -25,12 +21,6 @@ exports.codeReviewController = {
             });
         }
         catch (error) {
-            logger_1.default.error("Code review text analysis error", {
-                error: error instanceof Error ? error.message : String(error),
-                stack: error instanceof Error ? error.stack : undefined,
-                requestBody: req.body,
-                timestamp: new Date().toISOString(),
-            });
             return res.status(500).json({
                 error: "Code Review Error",
                 message: "Error processing code review request",
@@ -47,7 +37,6 @@ exports.codeReviewController = {
                     message: "At least one file is required",
                 });
             }
-            // Convert uploaded files to CodeReviewFile format
             const codeFiles = files.map((file) => ({
                 filename: file.originalname,
                 content: file.buffer.toString("utf8"),
@@ -55,12 +44,10 @@ exports.codeReviewController = {
             }));
             let result;
             if (codeFiles.length === 1) {
-                // Single file review
                 const file = codeFiles[0];
                 result = await codeReviewService.reviewCode(file.content, file.filename, threadId);
             }
             else {
-                // Multiple files review
                 result = await codeReviewService.reviewMultipleFiles(codeFiles, threadId);
             }
             return res.json({
@@ -76,12 +63,6 @@ exports.codeReviewController = {
             });
         }
         catch (error) {
-            logger_1.default.error("File review analysis error", {
-                error: error instanceof Error ? error.message : String(error),
-                stack: error instanceof Error ? error.stack : undefined,
-                filesCount: req.files?.length || 0,
-                timestamp: new Date().toISOString(),
-            });
             return res.status(500).json({
                 error: "File Review Error",
                 message: "Error processing file review request",
@@ -105,11 +86,6 @@ exports.codeReviewController = {
             });
         }
         catch (error) {
-            logger_1.default.error("Error getting supported languages", {
-                error: error instanceof Error ? error.message : String(error),
-                stack: error instanceof Error ? error.stack : undefined,
-                timestamp: new Date().toISOString(),
-            });
             return res.status(500).json({
                 error: "Server Error",
                 message: "Error retrieving supported languages",
@@ -156,11 +132,6 @@ exports.codeReviewController = {
             });
         }
         catch (error) {
-            logger_1.default.error("Error getting guidelines", {
-                error: error instanceof Error ? error.message : String(error),
-                stack: error instanceof Error ? error.stack : undefined,
-                timestamp: new Date().toISOString(),
-            });
             return res.status(500).json({
                 error: "Server Error",
                 message: "Error retrieving guidelines",

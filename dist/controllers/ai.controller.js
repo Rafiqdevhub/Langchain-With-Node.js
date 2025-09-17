@@ -1,11 +1,7 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.chatController = void 0;
 const chatbot_service_1 = require("../services/chatbot.service");
-const logger_1 = __importDefault(require("../config/logger"));
 const chatService = (0, chatbot_service_1.createChatService)();
 exports.chatController = {
     async chat(req, res) {
@@ -36,12 +32,6 @@ exports.chatController = {
             });
         }
         catch (error) {
-            logger_1.default.error("Chat controller error", {
-                error: error instanceof Error ? error.message : String(error),
-                stack: error instanceof Error ? error.stack : undefined,
-                requestBody: req.body,
-                timestamp: new Date().toISOString(),
-            });
             return res.status(500).json({ error: "Error processing chat request" });
         }
     },

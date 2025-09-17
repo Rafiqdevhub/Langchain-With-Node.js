@@ -10,7 +10,6 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { v4 as uuidv4 } from "uuid";
 import { config } from "../config/env";
 import path from "path";
-import logger from "../config/logger";
 
 export interface CodeReviewFile {
   filename: string;
@@ -151,12 +150,10 @@ Provide a comprehensive code review in the specified JSON format.`;
           };
         }
       } catch (error) {
-        logger.error("Error parsing AI response in single file review", {
-          error: error instanceof Error ? error.message : String(error),
-          stack: error instanceof Error ? error.stack : undefined,
-          rawResponse: lastMessage.content,
-          timestamp: new Date().toISOString(),
-        });
+        console.error(
+          `[${new Date().toISOString()}] Error parsing AI response in single file review:`,
+          error instanceof Error ? error.message : String(error)
+        );
       }
 
       // Fallback if JSON parsing fails
@@ -236,12 +233,10 @@ Return your analysis in the specified JSON format.`;
           };
         }
       } catch (error) {
-        logger.error("Error parsing AI response in multi-file review", {
-          error: error instanceof Error ? error.message : String(error),
-          stack: error instanceof Error ? error.stack : undefined,
-          rawResponse: lastMessage.content,
-          timestamp: new Date().toISOString(),
-        });
+        console.error(
+          `[${new Date().toISOString()}] Error parsing AI response in multi-file review:`,
+          error instanceof Error ? error.message : String(error)
+        );
       }
 
       const contentStr =

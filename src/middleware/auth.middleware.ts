@@ -3,7 +3,6 @@ import jwt from "jsonwebtoken";
 import { eq } from "drizzle-orm";
 import { db } from "../config/database";
 import { users } from "../models/users.model";
-import logger from "../config/logger";
 
 // Environment variables
 const JWT_SECRET =
@@ -135,11 +134,10 @@ export const authenticate = async (
 
     next();
   } catch (error) {
-    logger.error("Authentication middleware error", {
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-      timestamp: new Date().toISOString(),
-    });
+    console.error(
+      `[${new Date().toISOString()}] Authentication middleware error:`,
+      error instanceof Error ? error.message : String(error)
+    );
 
     res.status(500).json({
       error: "Internal Server Error",
@@ -167,19 +165,19 @@ export const optionalAuthenticate = async (
     await authenticate(req, res, (err?: any) => {
       if (err) {
         // Log the error but continue without authentication
-        logger.warn("Optional authentication failed", {
-          error: err instanceof Error ? err.message : String(err),
-          timestamp: new Date().toISOString(),
-        });
+        console.log(
+          `[${new Date().toISOString()}] Optional authentication failed:`,
+          err instanceof Error ? err.message : String(err)
+        );
       }
       next();
     });
   } catch (error) {
     // Log error but continue without authentication
-    logger.warn("Optional authentication middleware error", {
-      error: error instanceof Error ? error.message : String(error),
-      timestamp: new Date().toISOString(),
-    });
+    console.log(
+      `[${new Date().toISOString()}] Optional authentication middleware error:`,
+      error instanceof Error ? error.message : String(error)
+    );
     next();
   }
 };

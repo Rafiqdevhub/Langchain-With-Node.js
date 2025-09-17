@@ -11,7 +11,6 @@ const env_1 = require("./config/env");
 const ai_routes_1 = __importDefault(require("./routes/ai.routes"));
 const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
 const middleware_1 = require("./middleware");
-const logger_1 = __importDefault(require("./config/logger"));
 const app = (0, express_1.default)();
 // Trust proxy for proper IP detection in development/production
 if (env_1.config.nodeEnv === "development") {
@@ -36,11 +35,7 @@ app.use((req, res, next) => {
             req.body = JSON.parse(req.body);
         }
         catch (error) {
-            logger_1.default.error("Failed to parse text/plain body as JSON", {
-                error: error instanceof Error ? error.message : String(error),
-                headers: req.headers,
-                url: req.url,
-            });
+            console.error(`[${new Date().toISOString()}] Failed to parse text/plain body as JSON:`, error instanceof Error ? error.message : String(error));
         }
     }
     next();
@@ -111,29 +106,20 @@ app.use((err, req, res, next) => {
     const errorDetails = env_1.config.nodeEnv === "production"
         ? { message: "Internal Server Error" }
         : { message: err.message, stack: err.stack };
-    logger_1.default.error("Server error occurred", {
-        error: err.message,
-        stack: err.stack,
-        statusCode,
-        timestamp: new Date().toISOString(),
-    });
+    console.error(`[${new Date().toISOString()}] Server error occurred:`, err.message, statusCode);
     res.status(statusCode).json({
         error: "Server Error",
         ...errorDetails,
     });
 });
 const server = app.listen(env_1.config.port, () => {
-    logger_1.default.info("Server started successfully", {
-        environment: env_1.config.nodeEnv.toUpperCase(),
-        port: env_1.config.port,
-        url: `http://localhost:${env_1.config.port}`,
-        timestamp: new Date().toISOString(),
-    });
+    console.log(`[${new Date().toISOString()}] Server started successfully on port ${env_1.config.port} (${env_1.config.nodeEnv.toUpperCase()})`);
+    console.log(`[${new Date().toISOString()}] Server URL: http://localhost:${env_1.config.port}`);
 });
 process.on("SIGTERM", () => {
-    logger_1.default.info("SIGTERM signal received: closing HTTP server");
+    console.log(`[${new Date().toISOString()}] SIGTERM signal received: closing HTTP server`);
     server.close(() => {
-        logger_1.default.info("HTTP server closed gracefully");
+        console.log(`[${new Date().toISOString()}] HTTP server closed gracefully`);
         process.exit(0);
     });
 });

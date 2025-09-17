@@ -8,7 +8,6 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const drizzle_orm_1 = require("drizzle-orm");
 const database_1 = require("../config/database");
 const users_model_1 = require("../models/users.model");
-const logger_1 = __importDefault(require("../config/logger"));
 // Environment variables
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
 // Authentication middleware
@@ -102,16 +101,12 @@ const authenticate = async (req, res, next) => {
             id: user[0].id,
             email: user[0].email,
             name: user[0].name,
-            role: (decoded.role === "user") ? "user" : "user", // Default to "user" for all authenticated users
+            role: decoded.role === "user" ? "user" : "user", // Default to "user" for all authenticated users
         };
         next();
     }
     catch (error) {
-        logger_1.default.error("Authentication middleware error", {
-            error: error instanceof Error ? error.message : String(error),
-            stack: error instanceof Error ? error.stack : undefined,
-            timestamp: new Date().toISOString(),
-        });
+        console.error(`[${new Date().toISOString()}] Authentication middleware error:`, error instanceof Error ? error.message : String(error));
         res.status(500).json({
             error: "Internal Server Error",
             message: "Something went wrong during authentication",
@@ -132,20 +127,14 @@ const optionalAuthenticate = async (req, res, next) => {
         await (0, exports.authenticate)(req, res, (err) => {
             if (err) {
                 // Log the error but continue without authentication
-                logger_1.default.warn("Optional authentication failed", {
-                    error: err instanceof Error ? err.message : String(err),
-                    timestamp: new Date().toISOString(),
-                });
+                console.log(`[${new Date().toISOString()}] Optional authentication failed:`, err instanceof Error ? err.message : String(err));
             }
             next();
         });
     }
     catch (error) {
         // Log error but continue without authentication
-        logger_1.default.warn("Optional authentication middleware error", {
-            error: error instanceof Error ? error.message : String(error),
-            timestamp: new Date().toISOString(),
-        });
+        console.log(`[${new Date().toISOString()}] Optional authentication middleware error:`, error instanceof Error ? error.message : String(error));
         next();
     }
 };

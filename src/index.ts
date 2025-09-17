@@ -10,7 +10,6 @@ import {
   requestLogger,
   optionalAuthenticate,
 } from "./middleware";
-import logger from "./config/logger";
 
 const app = express();
 
@@ -40,11 +39,10 @@ app.use((req, res, next) => {
     try {
       req.body = JSON.parse(req.body);
     } catch (error) {
-      logger.error("Failed to parse text/plain body as JSON", {
-        error: error instanceof Error ? error.message : String(error),
-        headers: req.headers,
-        url: req.url,
-      });
+      console.error(
+        `[${new Date().toISOString()}] Failed to parse text/plain body as JSON:`,
+        error instanceof Error ? error.message : String(error)
+      );
     }
   }
   next();
@@ -132,12 +130,11 @@ app.use(
         ? { message: "Internal Server Error" }
         : { message: err.message, stack: err.stack };
 
-    logger.error("Server error occurred", {
-      error: err.message,
-      stack: err.stack,
-      statusCode,
-      timestamp: new Date().toISOString(),
-    });
+    console.error(
+      `[${new Date().toISOString()}] Server error occurred:`,
+      err.message,
+      statusCode
+    );
 
     res.status(statusCode).json({
       error: "Server Error",
@@ -147,18 +144,22 @@ app.use(
 );
 
 const server = app.listen(config.port, () => {
-  logger.info("Server started successfully", {
-    environment: config.nodeEnv.toUpperCase(),
-    port: config.port,
-    url: `http://localhost:${config.port}`,
-    timestamp: new Date().toISOString(),
-  });
+  console.log(
+    `[${new Date().toISOString()}] Server started successfully on port ${
+      config.port
+    } (${config.nodeEnv.toUpperCase()})`
+  );
+  console.log(
+    `[${new Date().toISOString()}] Server URL: http://localhost:${config.port}`
+  );
 });
 
 process.on("SIGTERM", () => {
-  logger.info("SIGTERM signal received: closing HTTP server");
+  console.log(
+    `[${new Date().toISOString()}] SIGTERM signal received: closing HTTP server`
+  );
   server.close(() => {
-    logger.info("HTTP server closed gracefully");
+    console.log(`[${new Date().toISOString()}] HTTP server closed gracefully`);
     process.exit(0);
   });
 });

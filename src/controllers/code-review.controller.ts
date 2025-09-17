@@ -4,7 +4,6 @@ import {
   CodeReviewFile,
 } from "../services/code-review.service";
 import { SUPPORTED_EXTENSIONS } from "../middleware/upload.middleware";
-import logger from "../config/logger";
 
 const codeReviewService = createCodeReviewService();
 
@@ -31,12 +30,6 @@ export const codeReviewController = {
         data: result,
       });
     } catch (error) {
-      logger.error("Code review text analysis error", {
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-        requestBody: req.body,
-        timestamp: new Date().toISOString(),
-      });
       return res.status(500).json({
         error: "Code Review Error",
         message: "Error processing code review request",
@@ -56,7 +49,6 @@ export const codeReviewController = {
         });
       }
 
-      // Convert uploaded files to CodeReviewFile format
       const codeFiles: CodeReviewFile[] = files.map((file) => ({
         filename: file.originalname,
         content: file.buffer.toString("utf8"),
@@ -65,7 +57,6 @@ export const codeReviewController = {
 
       let result;
       if (codeFiles.length === 1) {
-        // Single file review
         const file = codeFiles[0];
         result = await codeReviewService.reviewCode(
           file.content,
@@ -73,7 +64,6 @@ export const codeReviewController = {
           threadId
         );
       } else {
-        // Multiple files review
         result = await codeReviewService.reviewMultipleFiles(
           codeFiles,
           threadId
@@ -92,12 +82,6 @@ export const codeReviewController = {
         },
       });
     } catch (error) {
-      logger.error("File review analysis error", {
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-        filesCount: (req as any).files?.length || 0,
-        timestamp: new Date().toISOString(),
-      });
       return res.status(500).json({
         error: "File Review Error",
         message: "Error processing file review request",
@@ -122,11 +106,6 @@ export const codeReviewController = {
         },
       });
     } catch (error) {
-      logger.error("Error getting supported languages", {
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-        timestamp: new Date().toISOString(),
-      });
       return res.status(500).json({
         error: "Server Error",
         message: "Error retrieving supported languages",
@@ -173,11 +152,6 @@ export const codeReviewController = {
         },
       });
     } catch (error) {
-      logger.error("Error getting guidelines", {
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-        timestamp: new Date().toISOString(),
-      });
       return res.status(500).json({
         error: "Server Error",
         message: "Error retrieving guidelines",

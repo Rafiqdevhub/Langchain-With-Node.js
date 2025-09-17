@@ -4,7 +4,6 @@ import jwt from "jsonwebtoken";
 import { eq } from "drizzle-orm";
 import { db } from "../config/database";
 import { users } from "../models/users.model";
-import logger from "../config/logger";
 
 interface RegisterRequest {
   name: string;
@@ -110,12 +109,6 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
     const token = generateToken(newUser[0].id, newUser[0].email);
 
-    logger.info("User registered successfully", {
-      userId: newUser[0].id,
-      email: newUser[0].email,
-      timestamp: new Date().toISOString(),
-    });
-
     res.status(201).json({
       message: "User registered successfully",
       user: {
@@ -127,12 +120,6 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       token,
     });
   } catch (error) {
-    logger.error("Registration error", {
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-      timestamp: new Date().toISOString(),
-    });
-
     res.status(500).json({
       error: "Internal Server Error",
       message: "Something went wrong during registration",
@@ -178,12 +165,6 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     const token = generateToken(user[0].id, user[0].email);
 
-    logger.info("User logged in successfully", {
-      userId: user[0].id,
-      email: user[0].email,
-      timestamp: new Date().toISOString(),
-    });
-
     res.status(200).json({
       message: "Login successful",
       user: {
@@ -195,12 +176,6 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       token,
     });
   } catch (error) {
-    logger.error("Login error", {
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-      timestamp: new Date().toISOString(),
-    });
-
     res.status(500).json({
       error: "Internal Server Error",
       message: "Something went wrong during login",
@@ -246,12 +221,6 @@ export const getProfile = async (
       user: user[0],
     });
   } catch (error) {
-    logger.error("Get profile error", {
-      error: error instanceof Error ? error.message : String(error),
-      userId: req.user?.id,
-      timestamp: new Date().toISOString(),
-    });
-
     res.status(500).json({
       error: "Internal Server Error",
       message: "Something went wrong while fetching profile",
@@ -304,23 +273,11 @@ export const updateProfile = async (
       return;
     }
 
-    logger.info("User profile updated", {
-      userId: req.user.id,
-      newName: name.trim(),
-      timestamp: new Date().toISOString(),
-    });
-
     res.status(200).json({
       message: "Profile updated successfully",
       user: updatedUser[0],
     });
   } catch (error) {
-    logger.error("Update profile error", {
-      error: error instanceof Error ? error.message : String(error),
-      userId: req.user?.id,
-      timestamp: new Date().toISOString(),
-    });
-
     res.status(500).json({
       error: "Internal Server Error",
       message: "Something went wrong while updating profile",
@@ -397,21 +354,10 @@ export const changePassword = async (
       })
       .where(eq(users.id, req.user.id));
 
-    logger.info("User password changed", {
-      userId: req.user.id,
-      timestamp: new Date().toISOString(),
-    });
-
     res.status(200).json({
       message: "Password changed successfully",
     });
   } catch (error) {
-    logger.error("Change password error", {
-      error: error instanceof Error ? error.message : String(error),
-      userId: req.user?.id,
-      timestamp: new Date().toISOString(),
-    });
-
     res.status(500).json({
       error: "Internal Server Error",
       message: "Something went wrong while changing password",
@@ -424,23 +370,10 @@ export const logout = async (
   res: Response
 ): Promise<void> => {
   try {
-    if (req.user) {
-      logger.info("User logged out", {
-        userId: req.user.id,
-        timestamp: new Date().toISOString(),
-      });
-    }
-
     res.status(200).json({
       message: "Logout successful",
     });
   } catch (error) {
-    logger.error("Logout error", {
-      error: error instanceof Error ? error.message : String(error),
-      userId: req.user?.id,
-      timestamp: new Date().toISOString(),
-    });
-
     res.status(500).json({
       error: "Internal Server Error",
       message: "Something went wrong during logout",

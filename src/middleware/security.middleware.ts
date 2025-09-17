@@ -1,7 +1,6 @@
 import { slidingWindow } from "@arcjet/node";
 import { Request, Response, NextFunction } from "express";
 import aj from "../config/arcjet";
-import logger from "../config/logger";
 
 interface User {
   id?: number;
@@ -58,13 +57,11 @@ const securityMiddleware = async (
     const decision = await client.protect(req);
 
     if (decision.isDenied() && decision.reason.isBot()) {
-      logger.warn("Bot request blocked", {
-        ip: req.ip,
-        userAgent: req.get("User-Agent"),
-        path: req.path,
-        userId: req.user?.id,
-        userRole: role,
-      });
+      console.log(
+        `[${new Date().toISOString()}] Bot request blocked - IP: ${
+          req.ip
+        }, Path: ${req.path}, Role: ${role}`
+      );
 
       res.status(403).json({
         error: "Forbidden",
@@ -74,14 +71,11 @@ const securityMiddleware = async (
     }
 
     if (decision.isDenied() && decision.reason.isShield()) {
-      logger.warn("Shield blocked request", {
-        ip: req.ip,
-        userAgent: req.get("User-Agent"),
-        path: req.path,
-        method: req.method,
-        userId: req.user?.id,
-        userRole: role,
-      });
+      console.log(
+        `[${new Date().toISOString()}] Shield blocked request - IP: ${
+          req.ip
+        }, Path: ${req.path}, Method: ${req.method}, Role: ${role}`
+      );
 
       res.status(403).json({
         error: "Forbidden",
@@ -91,15 +85,11 @@ const securityMiddleware = async (
     }
 
     if (decision.isDenied() && decision.reason.isRateLimit()) {
-      logger.warn("Rate limit exceeded", {
-        ip: req.ip,
-        userAgent: req.get("User-Agent"),
-        path: req.path,
-        userId: req.user?.id,
-        userRole: role,
-        limit: limit,
-        interval: interval,
-      });
+      console.log(
+        `[${new Date().toISOString()}] Rate limit exceeded - IP: ${
+          req.ip
+        }, Path: ${req.path}, Role: ${role}, Limit: ${limit}/${interval}`
+      );
 
       res.status(429).json({
         error: "Too Many Requests",
@@ -115,12 +105,10 @@ const securityMiddleware = async (
 
     next();
   } catch (e: unknown) {
-    logger.error("Arcjet middleware error", {
-      error: e instanceof Error ? e.message : String(e),
-      stack: e instanceof Error ? e.stack : undefined,
-      timestamp: new Date().toISOString(),
-      userId: req.user?.id,
-    });
+    console.error(
+      `[${new Date().toISOString()}] Arcjet middleware error:`,
+      e instanceof Error ? e.message : String(e)
+    );
     res.status(500).json({
       error: "Internal server error",
       message: "Something went wrong with security middleware",
