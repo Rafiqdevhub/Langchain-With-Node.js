@@ -40,7 +40,7 @@ exports.chatController = {
                 error: error instanceof Error ? error.message : String(error),
                 stack: error instanceof Error ? error.stack : undefined,
                 requestBody: req.body,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
             });
             return res.status(500).json({ error: "Error processing chat request" });
         }

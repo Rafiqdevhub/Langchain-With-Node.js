@@ -4,10 +4,13 @@ import aj from "../config/arcjet";
 import logger from "../config/logger";
 
 interface User {
-  role?: "admin" | "user" | "guest";
+  id?: number;
+  email?: string;
+  name?: string;
+  role?: "user" | "guest";
 }
 
-interface AuthenticatedRequest extends Request {
+export interface AuthenticatedRequest extends Request {
   user?: User;
 }
 
@@ -17,34 +20,37 @@ interface ErrorResponse {
 }
 
 const securityMiddleware = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const role: string = (req as AuthenticatedRequest).user?.role || "guest";
+    const role: string = req.user?.role || "guest";
 
+    // Enhanced rate limiting based on user authentication status
     let limit: number;
+    let interval: string;
 
     switch (role) {
-      case "admin":
-        limit = 20;
-        break;
       case "user":
-        limit = 10;
+        limit = 15;
+        interval = "1m";
         break;
       case "guest":
         limit = 5;
+        interval = "1m";
         break;
       default:
         limit = 5;
+        interval = "1m";
         break;
     }
 
+    // Create client with dynamic rate limiting
     const client = aj.withRule(
       slidingWindow({
         mode: "LIVE",
-        interval: "1m",
+        interval: interval as any,
         max: limit,
       })
     );
@@ -56,6 +62,8 @@ const securityMiddleware = async (
         ip: req.ip,
         userAgent: req.get("User-Agent"),
         path: req.path,
+        userId: req.user?.id,
+        userRole: role,
       });
 
       res.status(403).json({
@@ -66,11 +74,13 @@ const securityMiddleware = async (
     }
 
     if (decision.isDenied() && decision.reason.isShield()) {
-      logger.warn("Shield Blocked request", {
+      logger.warn("Shield blocked request", {
         ip: req.ip,
         userAgent: req.get("User-Agent"),
         path: req.path,
         method: req.method,
+        userId: req.user?.id,
+        userRole: role,
       });
 
       res.status(403).json({
@@ -85,11 +95,20 @@ const securityMiddleware = async (
         ip: req.ip,
         userAgent: req.get("User-Agent"),
         path: req.path,
+        userId: req.user?.id,
+        userRole: role,
+        limit: limit,
+        interval: interval,
       });
 
-      res.status(403).json({
-        error: "Forbidden",
-        message: "Too many requests",
+      res.status(429).json({
+        error: "Too Many Requests",
+        message: `Rate limit exceeded. ${
+          role === "guest"
+            ? "Consider registering for higher limits."
+            : `Limit: ${limit} requests per minute.`
+        }`,
+        retryAfter: 60, // seconds
       } as ErrorResponse);
       return;
     }
@@ -100,6 +119,7 @@ const securityMiddleware = async (
       error: e instanceof Error ? e.message : String(e),
       stack: e instanceof Error ? e.stack : undefined,
       timestamp: new Date().toISOString(),
+      userId: req.user?.id,
     });
     res.status(500).json({
       error: "Internal server error",

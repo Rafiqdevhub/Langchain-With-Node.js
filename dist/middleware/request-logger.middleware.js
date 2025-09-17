@@ -14,7 +14,7 @@ const requestLogger = (req, res, next) => {
         userAgent: req.get("User-Agent"),
         ip: req.ip,
         timestamp: new Date().toISOString(),
-        requestId: Math.random().toString(36).substring(7)
+        requestId: Math.random().toString(36).substring(7),
     });
     // Override res.end to log response
     const originalEnd = res.end.bind(res);
@@ -26,7 +26,7 @@ const requestLogger = (req, res, next) => {
             statusCode: res.statusCode,
             duration: `${duration}ms`,
             ip: req.ip,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
         });
         return originalEnd(chunk, encoding);
     };

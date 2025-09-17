@@ -9,6 +9,7 @@ const helmet_1 = __importDefault(require("helmet"));
 const compression_1 = __importDefault(require("compression"));
 const env_1 = require("./config/env");
 const ai_routes_1 = __importDefault(require("./routes/ai.routes"));
+const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
 const middleware_1 = require("./middleware");
 const logger_1 = __importDefault(require("./config/logger"));
 const app = (0, express_1.default)();
@@ -38,22 +39,27 @@ app.use((req, res, next) => {
             logger_1.default.error("Failed to parse text/plain body as JSON", {
                 error: error instanceof Error ? error.message : String(error),
                 headers: req.headers,
-                url: req.url
+                url: req.url,
             });
         }
     }
     next();
 });
-// Apply Arcjet security middleware globally
-app.use(middleware_1.securityMiddleware);
-// Apply request logging middleware
 app.use(middleware_1.requestLogger);
+// Optional authentication middleware - attempts to authenticate users but doesn't fail if no token
+// This allows the security middleware to apply different rate limits based on auth status
+app.use(middleware_1.optionalAuthenticate);
+app.use(middleware_1.securityMiddleware);
 app.get("/", (req, res) => {
     res.json({
         status: "API is running",
         version: "2.0.0",
-        description: "AI-powered code review and chatbot service with Arcjet security",
+        description: "AI-powered code review and chatbot service with Arcjet security and user authentication",
         endpoints: [
+            "/api/auth/register",
+            "/api/auth/login",
+            "/api/auth/profile",
+            "/api/auth/logout",
             "/api/ai/chat",
             "/api/ai/review-text",
             "/api/ai/review-files",
@@ -65,11 +71,15 @@ app.get("/", (req, res) => {
             features: [
                 "Bot detection and blocking",
                 "Security threat shield",
-                "Rate limiting (5 requests/min for guests, 10 for users, 20 for admins)",
+                "Dynamic rate limiting (5 requests/min for guests, 15 for users)",
                 "Real-time request analysis",
+                "JWT-based authentication",
             ],
         },
         features: [
+            "User registration and authentication",
+            "JWT token-based sessions",
+            "User profile management",
             "AI Chatbot with conversation memory",
             "Code review for text input",
             "Multi-file code analysis",
@@ -88,6 +98,7 @@ app.get("/health", (req, res) => {
         version: "2.0.0",
     });
 });
+app.use("/api/auth", auth_routes_1.default);
 app.use("/api/ai", ai_routes_1.default);
 app.use((req, res) => {
     res.status(404).json({
@@ -104,7 +115,7 @@ app.use((err, req, res, next) => {
         error: err.message,
         stack: err.stack,
         statusCode,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
     });
     res.status(statusCode).json({
         error: "Server Error",
@@ -116,7 +127,7 @@ const server = app.listen(env_1.config.port, () => {
         environment: env_1.config.nodeEnv.toUpperCase(),
         port: env_1.config.port,
         url: `http://localhost:${env_1.config.port}`,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
     });
 });
 process.on("SIGTERM", () => {

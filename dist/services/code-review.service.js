@@ -111,7 +111,7 @@ Provide a comprehensive code review in the specified JSON format.`;
                     error: error instanceof Error ? error.message : String(error),
                     stack: error instanceof Error ? error.stack : undefined,
                     rawResponse: lastMessage.content,
-                    timestamp: new Date().toISOString()
+                    timestamp: new Date().toISOString(),
                 });
             }
             // Fallback if JSON parsing fails
@@ -180,7 +180,7 @@ Return your analysis in the specified JSON format.`;
                     error: error instanceof Error ? error.message : String(error),
                     stack: error instanceof Error ? error.stack : undefined,
                     rawResponse: lastMessage.content,
-                    timestamp: new Date().toISOString()
+                    timestamp: new Date().toISOString(),
                 });
             }
             const contentStr = typeof lastMessage.content === "string"

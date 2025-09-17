@@ -4,7 +4,12 @@ import helmet from "helmet";
 import compression from "compression";
 import { config } from "./config/env";
 import aiRoutes from "./routes/ai.routes";
-import { securityMiddleware, requestLogger } from "./middleware";
+import authRoutes from "./routes/auth.routes";
+import {
+  securityMiddleware,
+  requestLogger,
+  optionalAuthenticate,
+} from "./middleware";
 import logger from "./config/logger";
 
 const app = express();
@@ -45,16 +50,24 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(securityMiddleware);
 app.use(requestLogger);
+
+// Optional authentication middleware - attempts to authenticate users but doesn't fail if no token
+// This allows the security middleware to apply different rate limits based on auth status
+app.use(optionalAuthenticate);
+app.use(securityMiddleware);
 
 app.get("/", (req, res) => {
   res.json({
     status: "API is running",
     version: "2.0.0",
     description:
-      "AI-powered code review and chatbot service with Arcjet security",
+      "AI-powered code review and chatbot service with Arcjet security and user authentication",
     endpoints: [
+      "/api/auth/register",
+      "/api/auth/login",
+      "/api/auth/profile",
+      "/api/auth/logout",
       "/api/ai/chat",
       "/api/ai/review-text",
       "/api/ai/review-files",
@@ -66,11 +79,15 @@ app.get("/", (req, res) => {
       features: [
         "Bot detection and blocking",
         "Security threat shield",
-        "Rate limiting (5 requests/min for guests, 10 for users, 20 for admins)",
+        "Dynamic rate limiting (5 requests/min for guests, 15 for users)",
         "Real-time request analysis",
+        "JWT-based authentication",
       ],
     },
     features: [
+      "User registration and authentication",
+      "JWT token-based sessions",
+      "User profile management",
       "AI Chatbot with conversation memory",
       "Code review for text input",
       "Multi-file code analysis",
@@ -91,6 +108,7 @@ app.get("/health", (req, res) => {
   });
 });
 
+app.use("/api/auth", authRoutes);
 app.use("/api/ai", aiRoutes);
 
 app.use((req, res) => {

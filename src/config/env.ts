@@ -10,6 +10,11 @@ export const config = {
     ? process.env.CORS_ORIGINS.split(",")
     : ["https://codify-omega.vercel.app", "http://localhost:3000"],
   nodeEnv: process.env.NODE_ENV || "development",
+  // JWT Configuration
+  jwt: {
+    secret: process.env.JWT_SECRET || "your-secret-key-change-in-production",
+    expiresIn: process.env.JWT_EXPIRES_IN || "7d",
+  },
   // Arcjet Security Configuration
   arcjet: {
     key: process.env.ARCJET_KEY || "",
@@ -25,5 +30,9 @@ export const config = {
       process.env.RATE_LIMIT_DAILY_WINDOW_MS || "86400000"
     ),
     aiDailyMax: parseInt(process.env.RATE_LIMIT_AI_DAILY_MAX || "50"),
+    // Authentication specific rate limits
+    authWindowMs: parseInt(process.env.AUTH_RATE_LIMIT_WINDOW_MS || "900000"), // 15 minutes
+    authMax: parseInt(process.env.AUTH_RATE_LIMIT_MAX || "5"), // 5 auth attempts per 15 min
+    profileMax: parseInt(process.env.PROFILE_RATE_LIMIT_MAX || "20"), // 20 profile requests per 15 min
   },
 } as const;

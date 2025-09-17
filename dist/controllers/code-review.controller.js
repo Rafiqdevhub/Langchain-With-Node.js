@@ -29,7 +29,7 @@ exports.codeReviewController = {
                 error: error instanceof Error ? error.message : String(error),
                 stack: error instanceof Error ? error.stack : undefined,
                 requestBody: req.body,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
             });
             return res.status(500).json({
                 error: "Code Review Error",
@@ -80,7 +80,7 @@ exports.codeReviewController = {
                 error: error instanceof Error ? error.message : String(error),
                 stack: error instanceof Error ? error.stack : undefined,
                 filesCount: req.files?.length || 0,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
             });
             return res.status(500).json({
                 error: "File Review Error",
@@ -108,7 +108,7 @@ exports.codeReviewController = {
             logger_1.default.error("Error getting supported languages", {
                 error: error instanceof Error ? error.message : String(error),
                 stack: error instanceof Error ? error.stack : undefined,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
             });
             return res.status(500).json({
                 error: "Server Error",
@@ -159,7 +159,7 @@ exports.codeReviewController = {
             logger_1.default.error("Error getting guidelines", {
                 error: error instanceof Error ? error.message : String(error),
                 stack: error instanceof Error ? error.stack : undefined,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
             });
             return res.status(500).json({
                 error: "Server Error",
