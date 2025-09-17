@@ -1,5 +1,5 @@
 import arcjet, { shield, detectBot, slidingWindow } from "@arcjet/node";
-import { config } from "./env";
+import { config } from "./env.js";
 
 // Set the ARCJET_ENV environment variable for proper development mode
 if (config.nodeEnv === "development") {
