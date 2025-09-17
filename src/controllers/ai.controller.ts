@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { createChatService } from "../services/chatbot.service";
+import logger from "../config/logger";
 
 const chatService = createChatService();
 
@@ -36,7 +37,12 @@ export const chatController = {
         threadId: response.threadId,
       });
     } catch (error) {
-      console.error("Chat error:", error);
+      logger.error("Chat controller error", {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        requestBody: req.body,
+        timestamp: new Date().toISOString(),
+      });
       return res.status(500).json({ error: "Error processing chat request" });
     }
   },

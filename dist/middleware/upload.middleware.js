@@ -6,7 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SUPPORTED_EXTENSIONS = exports.uploadMiddleware = void 0;
 const multer_1 = __importDefault(require("multer"));
 const path_1 = __importDefault(require("path"));
-// Supported file extensions for code review
 const SUPPORTED_EXTENSIONS = [
     ".js",
     ".jsx",

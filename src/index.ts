@@ -2,11 +2,19 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import compression from "compression";
-import rateLimit from "express-rate-limit";
 import { config } from "./config/env";
 import aiRoutes from "./routes/ai.routes";
+import { securityMiddleware, requestLogger } from "./middleware";
+import logger from "./config/logger";
 
 const app = express();
+
+// Trust proxy for proper IP detection in development/production
+if (config.nodeEnv === "development") {
+  app.set("trust proxy", true);
+} else {
+  app.set("trust proxy", 1);
+}
 
 app.use(helmet());
 app.use(
@@ -27,57 +35,25 @@ app.use((req, res, next) => {
     try {
       req.body = JSON.parse(req.body);
     } catch (error) {
-      console.error("Failed to parse text/plain body as JSON:", error);
+      logger.error("Failed to parse text/plain body as JSON", {
+        error: error instanceof Error ? error.message : String(error),
+        headers: req.headers,
+        url: req.url,
+      });
     }
   }
   next();
 });
 
-const generalLimiter = rateLimit({
-  windowMs: 24 * 60 * 60 * 1000, // 24 hours
-  max: 20, // 20 requests per 24 hours per IP
-  message: {
-    error: "Daily general limit exceeded",
-    message:
-      "You have exceeded your daily limit of 20 requests. Please try again tomorrow.",
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: (req) => {
-    // Rate limit based on IP address + date
-    const today = new Date().toISOString().split("T")[0];
-    const clientIp = req.ip || "unknown-ip";
-    return `general-${clientIp}-${today}`;
-  },
-});
-
-// AI endpoints rate limiting - 5 requests per 24 hours
-const aiLimiter = rateLimit({
-  windowMs: 24 * 60 * 60 * 1000, // 24 hours
-  max: 5, // 5 AI requests per 24 hours per IP
-  message: {
-    error: "Daily AI limit exceeded",
-    message:
-      "You have exceeded your daily limit of 5 AI requests. Please try again tomorrow.",
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: (req) => {
-    // Rate limit based on IP address + date
-    const today = new Date().toISOString().split("T")[0];
-    const clientIp = req.ip || "unknown-ip";
-    return `ai-${clientIp}-${today}`;
-  },
-});
-
-// Apply rate limiting to all requests
-app.use(generalLimiter);
+app.use(securityMiddleware);
+app.use(requestLogger);
 
 app.get("/", (req, res) => {
   res.json({
     status: "API is running",
     version: "2.0.0",
-    description: "AI-powered code review and chatbot service",
+    description:
+      "AI-powered code review and chatbot service with Arcjet security",
     endpoints: [
       "/api/ai/chat",
       "/api/ai/review-text",
@@ -85,9 +61,14 @@ app.get("/", (req, res) => {
       "/api/ai/languages",
       "/api/ai/guidelines",
     ],
-    rateLimits: {
-      general: "20 requests per 24 hours",
-      ai: "5 requests per 24 hours",
+    security: {
+      provider: "Arcjet",
+      features: [
+        "Bot detection and blocking",
+        "Security threat shield",
+        "Rate limiting (5 requests/min for guests, 10 for users, 20 for admins)",
+        "Real-time request analysis",
+      ],
     },
     features: [
       "AI Chatbot with conversation memory",
@@ -96,6 +77,7 @@ app.get("/", (req, res) => {
       "Security vulnerability detection",
       "Code quality assessment",
       "Support for 25+ programming languages",
+      "Advanced security protection via Arcjet",
     ],
   });
 });
@@ -105,11 +87,11 @@ app.get("/health", (req, res) => {
     status: "healthy",
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    version: "1.0.0",
+    version: "2.0.0",
   });
 });
 
-app.use("/api/ai", aiLimiter, aiRoutes);
+app.use("/api/ai", aiRoutes);
 
 app.use((req, res) => {
   res.status(404).json({
@@ -132,7 +114,12 @@ app.use(
         ? { message: "Internal Server Error" }
         : { message: err.message, stack: err.stack };
 
-    console.error(`[${new Date().toISOString()}] Error:`, err);
+    logger.error("Server error occurred", {
+      error: err.message,
+      stack: err.stack,
+      statusCode,
+      timestamp: new Date().toISOString(),
+    });
 
     res.status(statusCode).json({
       error: "Server Error",
@@ -142,17 +129,18 @@ app.use(
 );
 
 const server = app.listen(config.port, () => {
-  console.log(
-    `[${config.nodeEnv.toUpperCase()}] Server running on http://localhost:${
-      config.port
-    }`
-  );
+  logger.info("Server started successfully", {
+    environment: config.nodeEnv.toUpperCase(),
+    port: config.port,
+    url: `http://localhost:${config.port}`,
+    timestamp: new Date().toISOString(),
+  });
 });
 
 process.on("SIGTERM", () => {
-  console.log("SIGTERM signal received: closing HTTP server");
+  logger.info("SIGTERM signal received: closing HTTP server");
   server.close(() => {
-    console.log("HTTP server closed");
+    logger.info("HTTP server closed gracefully");
     process.exit(0);
   });
 });

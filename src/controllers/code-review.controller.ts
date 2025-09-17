@@ -4,6 +4,7 @@ import {
   CodeReviewFile,
 } from "../services/code-review.service";
 import { SUPPORTED_EXTENSIONS } from "../middleware/upload.middleware";
+import logger from "../config/logger";
 
 const codeReviewService = createCodeReviewService();
 
@@ -30,7 +31,12 @@ export const codeReviewController = {
         data: result,
       });
     } catch (error) {
-      console.error("Code review error:", error);
+      logger.error("Code review text analysis error", {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        requestBody: req.body,
+        timestamp: new Date().toISOString(),
+      });
       return res.status(500).json({
         error: "Code Review Error",
         message: "Error processing code review request",
@@ -86,7 +92,12 @@ export const codeReviewController = {
         },
       });
     } catch (error) {
-      console.error("File review error:", error);
+      logger.error("File review analysis error", {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        filesCount: (req as any).files?.length || 0,
+        timestamp: new Date().toISOString(),
+      });
       return res.status(500).json({
         error: "File Review Error",
         message: "Error processing file review request",
@@ -111,7 +122,11 @@ export const codeReviewController = {
         },
       });
     } catch (error) {
-      console.error("Error getting supported languages:", error);
+      logger.error("Error getting supported languages", {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        timestamp: new Date().toISOString(),
+      });
       return res.status(500).json({
         error: "Server Error",
         message: "Error retrieving supported languages",
@@ -158,7 +173,11 @@ export const codeReviewController = {
         },
       });
     } catch (error) {
-      console.error("Error getting guidelines:", error);
+      logger.error("Error getting guidelines", {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        timestamp: new Date().toISOString(),
+      });
       return res.status(500).json({
         error: "Server Error",
         message: "Error retrieving guidelines",
