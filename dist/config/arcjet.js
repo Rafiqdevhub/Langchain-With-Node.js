@@ -1,4 +1,4 @@
-import arcjet, { shield, detectBot, slidingWindow } from "@arcjet/node";
+import arcjet, { shield, detectBot } from "@arcjet/node";
 import { config } from "./env.js";
 // Set the ARCJET_ENV environment variable for proper development mode
 if (config.nodeEnv === "development") {
@@ -12,11 +12,8 @@ const aj = arcjet({
             mode: config.arcjet.mode,
             allow: ["CATEGORY:SEARCH_ENGINE", "CATEGORY:PREVIEW"],
         }),
-        slidingWindow({
-            mode: config.arcjet.mode,
-            interval: "2s",
-            max: 5,
-        }),
+        // Removed default sliding window rule - rate limiting is now handled dynamically
+        // in the security middleware based on user authentication status
     ],
 });
 export default aj;

@@ -50,8 +50,6 @@ app.use((req, res, next) => {
 
 app.use(requestLogger);
 
-// Optional authentication middleware - attempts to authenticate users but doesn't fail if no token
-// This allows the security middleware to apply different rate limits based on auth status
 app.use(optionalAuthenticate);
 app.use(securityMiddleware);
 
@@ -77,7 +75,7 @@ app.get("/", (req, res) => {
       features: [
         "Bot detection and blocking",
         "Security threat shield",
-        "Dynamic rate limiting (5 requests/min for guests, 15 for users)",
+        "Dynamic rate limiting (10 requests/day per IP for guests, 100 requests/day for users)",
         "Real-time request analysis",
         "JWT-based authentication",
       ],

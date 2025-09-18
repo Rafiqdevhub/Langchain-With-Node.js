@@ -19,9 +19,8 @@ This application has been successfully integrated with **Arcjet** security featu
 ### 3. **Rate Limiting**
 
 - Dynamic rate limiting based on user roles:
-  - **Guest users**: 5 requests per minute
-  - **Authenticated users**: 10 requests per minute
-  - **Admin users**: 20 requests per minute
+  - **Guest users**: 10 requests per IP address per day
+  - **Authenticated users**: 100 requests per day
 - Sliding window algorithm for accurate rate limiting
 
 ## 📁 Files Modified
@@ -129,14 +128,13 @@ You can customize the security settings by modifying:
 ### Rate Limits (`src/middleware/security.middleware.ts`)
 
 ```typescript
-case "admin":
-    limit = 20; // requests per minute
-    break;
 case "user":
-    limit = 10; // requests per minute
+    limit = 100; // requests per day
+    interval = "1d";
     break;
 case "guest":
-    limit = 5;  // requests per minute
+    limit = 10;  // requests per IP address per day
+    interval = "1d";
     break;
 ```
 
@@ -173,7 +171,7 @@ The API now includes updated security information:
     "features": [
       "Bot detection and blocking",
       "Security threat shield",
-      "Rate limiting (5 requests/min for guests, 10 for users, 20 for admins)",
+      "Rate limiting (10 requests/day per IP for guests, 100 requests/day for users)",
       "Real-time request analysis"
     ]
   }

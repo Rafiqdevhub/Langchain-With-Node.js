@@ -61,7 +61,7 @@ app.get("/", (req, res) => {
             features: [
                 "Bot detection and blocking",
                 "Security threat shield",
-                "Dynamic rate limiting (5 requests/min for guests, 15 for users)",
+                "Dynamic rate limiting (10 requests/day per IP for guests, 100 requests/day for users)",
                 "Real-time request analysis",
                 "JWT-based authentication",
             ],

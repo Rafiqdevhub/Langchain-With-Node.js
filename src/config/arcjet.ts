@@ -14,11 +14,6 @@ const aj = arcjet({
       mode: config.arcjet.mode as "LIVE" | "DRY_RUN",
       allow: ["CATEGORY:SEARCH_ENGINE", "CATEGORY:PREVIEW"],
     }),
-    slidingWindow({
-      mode: config.arcjet.mode as "LIVE" | "DRY_RUN",
-      interval: "2s",
-      max: 5,
-    }),
   ],
 });
 

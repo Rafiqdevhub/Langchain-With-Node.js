@@ -17,9 +17,8 @@ This authentication system provides secure user management with JWT-based authen
 ### Security Features
 
 - Dynamic rate limiting based on user role:
-  - **Guests (unauthenticated)**: 5 requests/minute
-  - **Users (authenticated)**: 15 requests/minute
-  - **Admins**: 30 requests/minute
+  - **Guests (unauthenticated)**: 10 requests per IP address per day
+  - **Users (authenticated)**: 100 requests per day
 - Additional rate limiting for auth endpoints (5 attempts per 15 minutes)
 - Bot detection and blocking via Arcjet
 - Security threat shield
@@ -302,5 +301,10 @@ The system implements multi-layer rate limiting:
 1. **Arcjet Security Layer**: Dynamic limits based on user role
 2. **Express Rate Limit**: Additional protection for auth endpoints
 3. **Progressive Enhancement**: Higher limits for authenticated users
+
+**Rate Limits:**
+
+- **Guests (unauthenticated)**: 10 requests per IP address per day
+- **Users (authenticated)**: 100 requests per day
 
 This encourages user registration while protecting against abuse.

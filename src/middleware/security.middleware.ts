@@ -32,16 +32,16 @@ const securityMiddleware = async (
 
     switch (role) {
       case "user":
-        limit = 15;
-        interval = "1m";
+        limit = 100; // 100 requests per day for authenticated users
+        interval = "1d";
         break;
       case "guest":
-        limit = 5;
-        interval = "1m";
+        limit = 10; // 10 requests per IP address per day for guests
+        interval = "1d";
         break;
       default:
-        limit = 5;
-        interval = "1m";
+        limit = 10; // Default to guest limits
+        interval = "1d";
         break;
     }
 
@@ -91,14 +91,19 @@ const securityMiddleware = async (
         }, Path: ${req.path}, Role: ${role}, Limit: ${limit}/${interval}`
       );
 
+      const limitDescription =
+        role === "guest"
+          ? `${limit} requests per day per IP address`
+          : `${limit} requests per day`;
+
       res.status(429).json({
         error: "Too Many Requests",
-        message: `Rate limit exceeded. ${
+        message: `Rate limit exceeded. Limit: ${limitDescription}. ${
           role === "guest"
             ? "Consider registering for higher limits."
-            : `Limit: ${limit} requests per minute.`
+            : "Please try again tomorrow."
         }`,
-        retryAfter: 60, // seconds
+        retryAfter: 86400, // 24 hours in seconds
       } as ErrorResponse);
       return;
     }

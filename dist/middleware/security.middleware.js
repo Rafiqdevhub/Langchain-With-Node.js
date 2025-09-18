@@ -8,16 +8,16 @@ const securityMiddleware = async (req, res, next) => {
         let interval;
         switch (role) {
             case "user":
-                limit = 15;
-                interval = "1m";
+                limit = 100; // 100 requests per day for authenticated users
+                interval = "1d";
                 break;
             case "guest":
-                limit = 5;
-                interval = "1m";
+                limit = 10; // 10 requests per IP address per day for guests
+                interval = "1d";
                 break;
             default:
-                limit = 5;
-                interval = "1m";
+                limit = 10; // Default to guest limits
+                interval = "1d";
                 break;
         }
         // Create client with dynamic rate limiting
@@ -45,12 +45,15 @@ const securityMiddleware = async (req, res, next) => {
         }
         if (decision.isDenied() && decision.reason.isRateLimit()) {
             console.log(`[${new Date().toISOString()}] Rate limit exceeded - IP: ${req.ip}, Path: ${req.path}, Role: ${role}, Limit: ${limit}/${interval}`);
+            const limitDescription = role === "guest"
+                ? `${limit} requests per day per IP address`
+                : `${limit} requests per day`;
             res.status(429).json({
                 error: "Too Many Requests",
-                message: `Rate limit exceeded. ${role === "guest"
+                message: `Rate limit exceeded. Limit: ${limitDescription}. ${role === "guest"
                     ? "Consider registering for higher limits."
-                    : `Limit: ${limit} requests per minute.`}`,
-                retryAfter: 60, // seconds
+                    : "Please try again tomorrow."}`,
+                retryAfter: 86400, // 24 hours in seconds
             });
             return;
         }
