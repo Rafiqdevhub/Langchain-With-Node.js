@@ -17,15 +17,11 @@ else {
 app.use(helmet());
 app.use(cors({
     origin: config.corsOrigins,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
 }));
 // Handle preflight requests
 app.options("*", cors({
     origin: config.corsOrigins,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
 }));
 app.use(compression());
