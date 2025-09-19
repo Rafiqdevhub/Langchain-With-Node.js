@@ -12,8 +12,6 @@ const aj = arcjet({
             mode: config.arcjet.mode,
             allow: ["CATEGORY:SEARCH_ENGINE", "CATEGORY:PREVIEW"],
         }),
-        // Removed default sliding window rule - rate limiting is now handled dynamically
-        // in the security middleware based on user authentication status
     ],
 });
 export default aj;

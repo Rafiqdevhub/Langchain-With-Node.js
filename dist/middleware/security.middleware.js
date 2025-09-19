@@ -1,7 +1,15 @@
 import { slidingWindow } from "@arcjet/node";
 import aj from "../config/arcjet.js";
+import { config } from "../config/env.js";
 const securityMiddleware = async (req, res, next) => {
     try {
+        // Skip ALL security checks in development mode for unrestricted testing
+        if (config.nodeEnv === "development") {
+            console.log(`[${new Date().toISOString()}] Development mode: Skipping all security checks for ${req.method} ${req.path}`);
+            next();
+            return;
+        }
+        // Production mode: Apply full security and rate limiting
         const role = req.user?.role || "guest";
         // Enhanced rate limiting based on user authentication status
         let limit;
@@ -28,7 +36,7 @@ const securityMiddleware = async (req, res, next) => {
         }));
         const decision = await client.protect(req);
         if (decision.isDenied() && decision.reason.isBot()) {
-            console.log(`[${new Date().toISOString()}] Bot request blocked - IP: ${req.ip}, Path: ${req.path}, Role: ${role}`);
+            console.log(`[${new Date().toISOString()}] Bot request blocked - IP: ${req.ip}, Path: ${req.path}, Role: ${role} (Production mode)`);
             res.status(403).json({
                 error: "Forbidden",
                 message: "Automated requests are not allowed",
@@ -36,7 +44,7 @@ const securityMiddleware = async (req, res, next) => {
             return;
         }
         if (decision.isDenied() && decision.reason.isShield()) {
-            console.log(`[${new Date().toISOString()}] Shield blocked request - IP: ${req.ip}, Path: ${req.path}, Method: ${req.method}, Role: ${role}`);
+            console.log(`[${new Date().toISOString()}] Shield blocked request - IP: ${req.ip}, Path: ${req.path}, Method: ${req.method}, Role: ${role} (Production mode)`);
             res.status(403).json({
                 error: "Forbidden",
                 message: "Request blocked by security policy",
@@ -44,7 +52,7 @@ const securityMiddleware = async (req, res, next) => {
             return;
         }
         if (decision.isDenied() && decision.reason.isRateLimit()) {
-            console.log(`[${new Date().toISOString()}] Rate limit exceeded - IP: ${req.ip}, Path: ${req.path}, Role: ${role}, Limit: ${limit}/${interval}`);
+            console.log(`[${new Date().toISOString()}] Rate limit exceeded - IP: ${req.ip}, Path: ${req.path}, Role: ${role}, Limit: ${limit}/${interval} (Production mode)`);
             const limitDescription = role === "guest"
                 ? `${limit} requests per day per IP address`
                 : `${limit} requests per day`;

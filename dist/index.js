@@ -36,8 +36,6 @@ app.use((req, res, next) => {
     next();
 });
 app.use(requestLogger);
-// Optional authentication middleware - attempts to authenticate users but doesn't fail if no token
-// This allows the security middleware to apply different rate limits based on auth status
 app.use(optionalAuthenticate);
 app.use(securityMiddleware);
 app.get("/", (req, res) => {
@@ -58,13 +56,20 @@ app.get("/", (req, res) => {
         ],
         security: {
             provider: "Arcjet",
-            features: [
-                "Bot detection and blocking",
-                "Security threat shield",
-                "Dynamic rate limiting (10 requests/day per IP for guests, 100 requests/day for users)",
-                "Real-time request analysis",
-                "JWT-based authentication",
-            ],
+            features: config.nodeEnv === "development"
+                ? [
+                    "ALL SECURITY DISABLED in development mode for unrestricted testing",
+                    "No bot detection, no rate limiting, no security shield",
+                    "Perfect for development and testing",
+                    "JWT-based authentication still available",
+                ]
+                : [
+                    "Bot detection and blocking",
+                    "Security threat shield",
+                    "Dynamic rate limiting (10 requests/day per IP for guests, 100 requests/day for users)",
+                    "Real-time request analysis",
+                    "JWT-based authentication",
+                ],
         },
         features: [
             "User registration and authentication",

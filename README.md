@@ -1,4 +1,9 @@
-# AI Code Review Agent with LangChain & Google Gemini + User Authentication
+# AI Code Review Agent with L- **Dynamic Rate Limiting** based on user authentication status (Production only):
+
+- **Development Mode**: ALL security disabled - no bot detection, no rate limiting, no security shield
+- **Production Mode**:
+  - **Guests (unauthenticated)**: 10 requests per day per IP address
+  - **Users (authenticated)**: 100 requests per dayain & Google Gemini + User Authentication
 
 A production-ready RESTful API for AI-powered code review and chatbot services using LangChain and Google's Gemini AI model. This backend service provides comprehensive code analysis, security vulnerability detection, intelligent conversation capabilities, and secure user authentication with JWT tokens.
 

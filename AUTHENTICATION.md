@@ -17,12 +17,14 @@ This authentication system provides secure user management with JWT-based authen
 ### Security Features
 
 - Dynamic rate limiting based on user role (Production only):
-  - **Development Mode**: Rate limiting disabled for easier testing
+  - **Development Mode**: ALL SECURITY COMPLETELY DISABLED for unrestricted testing
   - **Production Mode**:
     - **Guests (unauthenticated)**: 10 requests per IP address per day
     - **Users (authenticated)**: 100 requests per day
 - Additional rate limiting for auth endpoints (5 attempts per 15 minutes) - Production only
-- Bot detection and blocking via Arcjet (All environments)
+- Bot detection and blocking via Arcjet (Production only)
+- Security threat shield (Production only)
+- Input validation and sanitization (All environments)
 - Security threat shield (All environments)
 - Input validation and sanitization (All environments)
 
@@ -306,7 +308,7 @@ The system implements multi-layer rate limiting:
 
 **Rate Limits (Production Only):**
 
-- **Development Mode**: All rate limiting is disabled for easier development and testing
+- **Development Mode**: ALL SECURITY COMPLETELY DISABLED - no limits, no restrictions
 - **Production Mode**:
   - **Guests (unauthenticated)**: 10 requests per IP address per day
   - **Users (authenticated)**: 100 requests per day

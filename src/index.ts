@@ -75,11 +75,10 @@ app.get("/", (req, res) => {
       features:
         config.nodeEnv === "development"
           ? [
-              "Bot detection and blocking",
-              "Security threat shield",
-              "Rate limiting disabled in development mode",
-              "Real-time request analysis",
-              "JWT-based authentication",
+              "ALL SECURITY DISABLED in development mode for unrestricted testing",
+              "No bot detection, no rate limiting, no security shield",
+              "Perfect for development and testing",
+              "JWT-based authentication still available",
             ]
           : [
               "Bot detection and blocking",
