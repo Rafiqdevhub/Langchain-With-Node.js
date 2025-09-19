@@ -9,30 +9,38 @@ import {
   changePassword,
 } from "../controllers/auth.controller.js";
 import { authenticate } from "../middleware/auth.middleware.js";
+import { config } from "../config/env.js";
 
 const router = Router();
 
-const authRateLimit = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5,
-  message: {
-    error: "Too Many Requests",
-    message: "Too many authentication attempts, please try again later",
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+// Only apply rate limiting in production mode
+const authRateLimit =
+  config.nodeEnv === "production"
+    ? rateLimit({
+        windowMs: 15 * 60 * 1000, // 15 minutes
+        max: 5,
+        message: {
+          error: "Too Many Requests",
+          message: "Too many authentication attempts, please try again later",
+        },
+        standardHeaders: true,
+        legacyHeaders: false,
+      })
+    : (req: any, res: any, next: any) => next(); // No-op middleware in development
 
-const profileRateLimit = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 20,
-  message: {
-    error: "Too Many Requests",
-    message: "Too many profile requests, please try again later",
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+const profileRateLimit =
+  config.nodeEnv === "production"
+    ? rateLimit({
+        windowMs: 15 * 60 * 1000,
+        max: 20,
+        message: {
+          error: "Too Many Requests",
+          message: "Too many profile requests, please try again later",
+        },
+        standardHeaders: true,
+        legacyHeaders: false,
+      })
+    : (req: any, res: any, next: any) => next(); // No-op middleware in development
 
 router.post("/register", authRateLimit, register);
 router.post("/login", authRateLimit, login);

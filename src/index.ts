@@ -72,13 +72,22 @@ app.get("/", (req, res) => {
     ],
     security: {
       provider: "Arcjet",
-      features: [
-        "Bot detection and blocking",
-        "Security threat shield",
-        "Dynamic rate limiting (10 requests/day per IP for guests, 100 requests/day for users)",
-        "Real-time request analysis",
-        "JWT-based authentication",
-      ],
+      features:
+        config.nodeEnv === "development"
+          ? [
+              "Bot detection and blocking",
+              "Security threat shield",
+              "Rate limiting disabled in development mode",
+              "Real-time request analysis",
+              "JWT-based authentication",
+            ]
+          : [
+              "Bot detection and blocking",
+              "Security threat shield",
+              "Dynamic rate limiting (10 requests/day per IP for guests, 100 requests/day for users)",
+              "Real-time request analysis",
+              "JWT-based authentication",
+            ],
     },
     features: [
       "User registration and authentication",

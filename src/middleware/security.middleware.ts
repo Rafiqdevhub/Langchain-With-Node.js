@@ -1,6 +1,7 @@
 import { slidingWindow } from "@arcjet/node";
 import { Request, Response, NextFunction } from "express";
 import aj from "../config/arcjet.js";
+import { config } from "../config/env.js";
 
 interface User {
   id?: number;
@@ -24,6 +25,45 @@ const securityMiddleware = async (
   next: NextFunction
 ): Promise<void> => {
   try {
+    // Skip rate limiting in development mode
+    if (config.nodeEnv === "development") {
+      // Still apply basic security checks (bot detection and shield)
+      const decision = await aj.protect(req);
+
+      if (decision.isDenied() && decision.reason.isBot()) {
+        console.log(
+          `[${new Date().toISOString()}] Bot request blocked - IP: ${
+            req.ip
+          }, Path: ${req.path} (Development mode)`
+        );
+
+        res.status(403).json({
+          error: "Forbidden",
+          message: "Automated requests are not allowed",
+        } as ErrorResponse);
+        return;
+      }
+
+      if (decision.isDenied() && decision.reason.isShield()) {
+        console.log(
+          `[${new Date().toISOString()}] Shield blocked request - IP: ${
+            req.ip
+          }, Path: ${req.path}, Method: ${req.method} (Development mode)`
+        );
+
+        res.status(403).json({
+          error: "Forbidden",
+          message: "Request blocked by security policy",
+        } as ErrorResponse);
+        return;
+      }
+
+      // Skip rate limiting in development and continue
+      next();
+      return;
+    }
+
+    // Production mode: Apply full rate limiting
     const role: string = req.user?.role || "guest";
 
     // Enhanced rate limiting based on user authentication status
@@ -60,7 +100,7 @@ const securityMiddleware = async (
       console.log(
         `[${new Date().toISOString()}] Bot request blocked - IP: ${
           req.ip
-        }, Path: ${req.path}, Role: ${role}`
+        }, Path: ${req.path}, Role: ${role} (Production mode)`
       );
 
       res.status(403).json({
@@ -74,7 +114,9 @@ const securityMiddleware = async (
       console.log(
         `[${new Date().toISOString()}] Shield blocked request - IP: ${
           req.ip
-        }, Path: ${req.path}, Method: ${req.method}, Role: ${role}`
+        }, Path: ${req.path}, Method: ${
+          req.method
+        }, Role: ${role} (Production mode)`
       );
 
       res.status(403).json({
@@ -88,7 +130,9 @@ const securityMiddleware = async (
       console.log(
         `[${new Date().toISOString()}] Rate limit exceeded - IP: ${
           req.ip
-        }, Path: ${req.path}, Role: ${role}, Limit: ${limit}/${interval}`
+        }, Path: ${
+          req.path
+        }, Role: ${role}, Limit: ${limit}/${interval} (Production mode)`
       );
 
       const limitDescription =

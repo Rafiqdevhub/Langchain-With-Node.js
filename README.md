@@ -27,9 +27,11 @@ A production-ready RESTful API for AI-powered code review and chatbot services u
 ### Security & Performance
 
 - **Arcjet Security Integration** with bot detection and threat shield
-- **Dynamic Rate Limiting** based on user authentication status:
-  - **Guests (unauthenticated)**: 5 requests per minute
-  - **Users (authenticated)**: 15 requests per minute
+- **Dynamic Rate Limiting** based on user authentication status (Production only):
+  - **Development Mode**: Rate limiting disabled for easier testing and development
+  - **Production Mode**:
+    - **Guests (unauthenticated)**: 10 requests per day per IP address
+    - **Users (authenticated)**: 100 requests per day
 - **Additional Authentication Rate Limiting**: 5 attempts per 15 minutes
 - **Password Security**: bcrypt hashing with 12 salt rounds
 - **Database Integration**: PostgreSQL with Drizzle ORM via NeonDB

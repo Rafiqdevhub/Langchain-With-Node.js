@@ -16,13 +16,15 @@ This authentication system provides secure user management with JWT-based authen
 
 ### Security Features
 
-- Dynamic rate limiting based on user role:
-  - **Guests (unauthenticated)**: 10 requests per IP address per day
-  - **Users (authenticated)**: 100 requests per day
-- Additional rate limiting for auth endpoints (5 attempts per 15 minutes)
-- Bot detection and blocking via Arcjet
-- Security threat shield
-- Input validation and sanitization
+- Dynamic rate limiting based on user role (Production only):
+  - **Development Mode**: Rate limiting disabled for easier testing
+  - **Production Mode**:
+    - **Guests (unauthenticated)**: 10 requests per IP address per day
+    - **Users (authenticated)**: 100 requests per day
+- Additional rate limiting for auth endpoints (5 attempts per 15 minutes) - Production only
+- Bot detection and blocking via Arcjet (All environments)
+- Security threat shield (All environments)
+- Input validation and sanitization (All environments)
 
 ## API Endpoints
 
@@ -302,9 +304,11 @@ The system implements multi-layer rate limiting:
 2. **Express Rate Limit**: Additional protection for auth endpoints
 3. **Progressive Enhancement**: Higher limits for authenticated users
 
-**Rate Limits:**
+**Rate Limits (Production Only):**
 
-- **Guests (unauthenticated)**: 10 requests per IP address per day
-- **Users (authenticated)**: 100 requests per day
+- **Development Mode**: All rate limiting is disabled for easier development and testing
+- **Production Mode**:
+  - **Guests (unauthenticated)**: 10 requests per IP address per day
+  - **Users (authenticated)**: 100 requests per day
 
 This encourages user registration while protecting against abuse.
