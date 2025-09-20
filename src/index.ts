@@ -23,8 +23,7 @@ if (config.nodeEnv === "development") {
 app.use(helmet());
 app.use(
   cors({
-    // origin: config.corsOrigins,
-    origin: ["http://localhost:3000", "https://codify-omega.vercel.app/"],
+    origin: ["http://localhost:3000", "https://codify-omega.vercel.app"],
     credentials: true,
   })
 );
