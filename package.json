@@ -36,7 +36,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.0.3",
     "@types/uuid": "^10.0.0",
-    "drizzle-kit": "^0.18.1",
+    "drizzle-kit": "^0.31.4",
     "nodemon": "^3.0.1",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.3",
@@ -45,6 +45,8 @@
   "dependencies": {
     "@arcjet/inspect": "^1.0.0-beta.11",
     "@arcjet/node": "^1.0.0-beta.11",
+    "@esbuild-kit/core-utils": "^3.3.2",
+    "@esbuild-kit/esm-loader": "^2.6.5",
     "@langchain/community": "^0.3.47",
     "@langchain/core": "^0.3.61",
     "@langchain/google-genai": "^0.2.13",

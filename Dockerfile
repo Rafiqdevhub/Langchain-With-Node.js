@@ -11,7 +11,7 @@ COPY package*.json ./
 RUN npm ci --only=production
 
 # Production stage
-FROM node:20-alpine AS production
+RUN npm ci --only=production && npm cache clean --force
 
 # Set working directory
 WORKDIR /app
