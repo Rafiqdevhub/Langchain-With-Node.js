@@ -1,0 +1,13 @@
+version: "3.8"
+
+services:
+  app:
+    build: .
+    container_name: codify-backend-prod
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env.production
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped

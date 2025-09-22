@@ -28,7 +28,6 @@ interface AuthenticatedRequest extends Request {
 const JWT_SECRET =
   process.env.JWT_SECRET || "your-secret-key-change-in-production";
 
-// Helper function to generate JWT token
 const generateToken = (userId: number, email: string): string => {
   const payload = {
     id: userId,

@@ -6,13 +6,12 @@ node_modules/
 # Logs
 logs/
 *.log
+copilot-instructions.md
 
 # Environment variables
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.development
+.env.production
 
 # Logs
 logs
@@ -33,3 +32,4 @@ yarn-error.log*
 # OS specific
 .DS_Store
 Thumbs.db
+.neon_local/

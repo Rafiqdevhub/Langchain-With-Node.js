@@ -1,9 +1,9 @@
-# AI Code Review Agent with L- **Dynamic Rate Limiting** based on user authentication status (Production only):
+# Codify: AI Code Review Agent with LangChain & Google Gemini + User Authentication
 
 - **Development Mode**: ALL security disabled - no bot detection, no rate limiting, no security shield
 - **Production Mode**:
   - **Guests (unauthenticated)**: 10 requests per day per IP address
-  - **Users (authenticated)**: 100 requests per dayain & Google Gemini + User Authentication
+  - **Users (authenticated)**: 100 requests per day
 
 A production-ready RESTful API for AI-powered code review and chatbot services using LangChain and Google's Gemini AI model. This backend service provides comprehensive code analysis, security vulnerability detection, intelligent conversation capabilities, and secure user authentication with JWT tokens.
 
@@ -87,6 +87,81 @@ A production-ready RESTful API for AI-powered code review and chatbot services u
    ```bash
    npm run dev
    ```
+
+## Docker Setup
+
+The application is fully dockerized with different configurations for development and production environments.
+
+### Development with Docker
+
+For local development using Neon Local (ephemeral PostgreSQL database):
+
+1. **Ensure Docker and Docker Compose are installed**
+
+2. **Configure environment variables**:
+
+   ```bash
+   cp .env.development .env.development.local
+   ```
+
+   Edit `.env.development.local` with your API keys (Google AI, Arcjet).
+
+3. **Start development environment**:
+
+   ```bash
+   docker-compose -f docker-compose.dev.yml up --build
+   ```
+
+   This will:
+
+   - Start Neon Local database on port 5432
+   - Build and start the application on port 5000
+   - Mount source code for hot reloading
+
+4. **Run database migrations** (in a new terminal):
+
+   ```bash
+   docker-compose -f docker-compose.dev.yml exec app npm run db:migrate
+   ```
+
+5. **Access the application**:
+   - API: http://localhost:5000
+   - Database: postgres://postgres:postgres@localhost:5432/postgres
+
+### Production with Docker
+
+For production deployment using Neon Cloud database:
+
+1. **Configure environment variables**:
+
+   ```bash
+   cp .env.production .env.production.local
+   ```
+
+   Edit `.env.production.local` with:
+
+   - Production Neon database URL
+   - Production API keys
+   - Production CORS origins
+
+2. **Build and run production environment**:
+
+   ```bash
+   docker-compose -f docker-compose.prod.yml up --build -d
+   ```
+
+3. **Access the application**:
+   - API: http://localhost:5000 (or your configured port)
+
+### Environment Variables Switching
+
+- **Development**: Uses `.env.development` with Neon Local connection
+- **Production**: Uses `.env.production` with Neon Cloud connection
+
+The `DATABASE_URL` automatically switches between:
+
+- Dev: `postgres://postgres:postgres@neon-local:5432/postgres`
+- Prod: Your Neon Cloud URL (e.g., `postgres://...neon.tech...`)
 
 ## API Reference
 
