@@ -163,6 +163,346 @@ The `DATABASE_URL` automatically switches between:
 - Dev: `postgres://postgres:postgres@db:5432/codify_dev`
 - Prod: Your Neon Cloud URL (e.g., `postgres://...neon.tech...`)
 
+## Advanced Docker Deployment
+
+### Environment Variables Management
+
+#### For Local Development
+
+```bash
+# Copy and configure development environment
+cp .env.example .env.development
+# Edit .env.development with your local configuration
+
+# Start development environment
+npm run dev:docker
+```
+
+#### For Production Deployment
+
+##### Option 1: Docker Compose (Recommended)
+
+```bash
+# Create production environment file
+cp .env.example .env.production
+
+# Edit .env.production with production values:
+# - DATABASE_URL=your-neon-production-url
+# - JWT_SECRET=strong-production-secret
+# - GOOGLE_API_KEY=your-production-key
+# - ARCJET_KEY=your-production-arcjet-key
+# - CORS_ORIGINS=https://yourdomain.com
+# - NODE_ENV=production
+
+# Deploy
+docker compose -f docker-compose.prod.yml up -d
+```
+
+##### Option 2: Direct Docker Run
+
+```bash
+# Run with environment file
+docker run -d \
+  --name codify-backend \
+  -p 5000:5000 \
+  --env-file .env.production \
+  rafiq9323/codify-backend:latest
+```
+
+##### Option 3: Docker Run with Inline Environment Variables
+
+```bash
+docker run -d \
+  --name codify-backend \
+  -p 5000:5000 \
+  -e NODE_ENV=production \
+  -e PORT=5000 \
+  -e DATABASE_URL="postgresql://user:pass@host:5432/db" \
+  -e JWT_SECRET="your-super-secret-key" \
+  -e GOOGLE_API_KEY="your-google-api-key" \
+  -e ARCJET_KEY="your-arcjet-key" \
+  -e CORS_ORIGINS="https://yourdomain.com" \
+  rafiq9323/codify-backend:latest
+```
+
+##### Option 4: Kubernetes Deployment
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: codify-backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: codify-backend
+  template:
+    metadata:
+      labels:
+        app: codify-backend
+    spec:
+      containers:
+        - name: codify-backend
+          image: rafiq9323/codify-backend:latest
+          ports:
+            - containerPort: 5000
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: codify-secrets
+                  key: database-url
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: codify-secrets
+                  key: jwt-secret
+            - name: GOOGLE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: codify-secrets
+                  key: google-api-key
+          envFrom:
+            - configMapRef:
+                name: codify-config
+```
+
+### Docker Image Management
+
+#### Building Locally
+
+```bash
+# Build for local testing
+docker build -t codify-backend:local .
+
+# Run locally
+docker run -p 5000:5000 --env-file .env.development codify-backend:local
+```
+
+#### Pulling from Docker Hub
+
+```bash
+# Pull latest image
+docker pull rafiq9323/codify-backend:latest
+
+# Run with environment variables
+docker run -p 5000:5000 \
+  -e DATABASE_URL="your-db-url" \
+  -e JWT_SECRET="your-secret" \
+  rafiq9323/codify-backend:latest
+```
+
+#### Image Information
+
+- **Repository**: `rafiq9323/codify-backend`
+- **Architecture**: Multi-platform (AMD64, ARM64)
+- **Base Image**: Node.js 20 Alpine
+- **Size**: ~444MB
+- **Health Check**: Built-in `/health` endpoint
+
+### Database Migration in Docker
+
+#### Development Environment
+
+```bash
+# Run migrations inside running container
+docker compose -f docker-compose.dev.yml exec app npm run db:migrate
+
+# Or run locally (if containers are down)
+npm run db:migrate
+```
+
+#### Production Environment
+
+```bash
+# Run migrations in production container
+docker compose -f docker-compose.prod.yml exec app npm run db:migrate
+
+# Or with direct docker exec
+docker exec codify-backend npm run db:migrate
+```
+
+### Troubleshooting Docker Issues
+
+#### Common Problems & Solutions
+
+##### 1. Port Already in Use
+
+```bash
+# Find what's using port 5000
+netstat -ano | findstr :5000
+
+# Kill the process or change port
+docker run -p 5001:5000 rafiq9323/codify-backend:latest
+```
+
+##### 2. Database Connection Failed
+
+```bash
+# Check database container logs
+docker compose -f docker-compose.dev.yml logs db
+
+# Test database connection
+docker compose -f docker-compose.dev.yml exec db pg_isready -U postgres -d codify_dev
+```
+
+##### 3. Environment Variables Not Loaded
+
+```bash
+# Verify environment file exists
+ls -la .env*
+
+# Check environment variables in container
+docker exec codify-backend env | grep -E "(DATABASE_URL|JWT_SECRET|GOOGLE_API_KEY)"
+```
+
+##### 4. Permission Denied on Docker Socket
+
+```bash
+# On Linux, add user to docker group
+sudo usermod -aG docker $USER
+
+# Or run with sudo
+sudo docker compose up
+```
+
+##### 5. Build Fails Due to Cache
+
+```bash
+# Build without cache
+docker compose -f docker-compose.dev.yml build --no-cache
+
+# Clean Docker system
+docker system prune -a
+```
+
+##### 6. Container Exits Immediately
+
+```bash
+# Check container logs
+docker logs codify-backend
+
+# Run interactively to debug
+docker run -it --rm rafiq9323/codify-backend:latest /bin/sh
+```
+
+### Docker Compose Commands Reference
+
+```bash
+# Development
+docker compose -f docker-compose.dev.yml up              # Start in foreground
+docker compose -f docker-compose.dev.yml up -d           # Start in background
+docker compose -f docker-compose.dev.yml down            # Stop containers
+docker compose -f docker-compose.dev.yml logs -f         # Follow logs
+docker compose -f docker-compose.dev.yml exec app bash   # Access container shell
+
+# Production
+docker compose -f docker-compose.prod.yml up -d          # Deploy production
+docker compose -f docker-compose.prod.yml down           # Stop production
+docker compose -f docker-compose.prod.yml restart        # Restart services
+docker compose -f docker-compose.prod.yml logs -f app    # Follow app logs
+```
+
+### Security Best Practices
+
+#### Environment Variables
+
+- ✅ **Never commit** `.env` files to git
+- ✅ **Use strong, unique secrets** for production
+- ✅ **Rotate JWT secrets** regularly
+- ✅ **Use HTTPS URLs** in CORS_ORIGINS
+
+#### Docker Security
+
+- ✅ **Run as non-root user** (configured in Dockerfile)
+- ✅ **Use specific image tags** (not `latest` in production)
+- ✅ **Scan images** for vulnerabilities
+- ✅ **Keep base images updated**
+
+#### Database Security
+
+- ✅ **Use connection pooling** (handled by NeonDB)
+- ✅ **Enable SSL/TLS** (default with NeonDB)
+- ✅ **Regular backups** (handled by NeonDB)
+- ✅ **Parameterized queries** (Drizzle ORM)
+
+### Monitoring & Health Checks
+
+#### Health Check Endpoint
+
+```bash
+# Test health endpoint
+curl http://localhost:5000/health
+
+# Expected response
+{
+  "status": "healthy",
+  "timestamp": "2025-09-22T...",
+  "uptime": 123.45,
+  "version": "2.0.0"
+}
+```
+
+#### Container Health
+
+```bash
+# Check container health
+docker ps
+
+# View resource usage
+docker stats codify-backend
+
+# Monitor logs
+docker logs -f codify-backend
+```
+
+### Scaling Considerations
+
+#### Horizontal Scaling
+
+```bash
+# Run multiple instances
+docker run -d -p 5001:5000 rafiq9323/codify-backend:latest
+docker run -d -p 5002:5000 rafiq9323/codify-backend:latest
+
+# Use load balancer (nginx example)
+docker run -d -p 80:80 \
+  --link codify-backend-1:backend1 \
+  --link codify-backend-2:backend2 \
+  nginx
+```
+
+#### Database Scaling
+
+- **NeonDB** handles automatic scaling
+- **Connection pooling** built-in
+- **Read replicas** available for high traffic
+
+### Backup & Recovery
+
+#### Database Backups
+
+```bash
+# NeonDB provides automatic backups
+# Manual backup if needed
+docker compose -f docker-compose.dev.yml exec db pg_dump -U postgres codify_dev > backup.sql
+```
+
+#### Container Recovery
+
+```bash
+# Restart failed containers
+docker compose -f docker-compose.prod.yml restart
+
+# Recreate containers
+docker compose -f docker-compose.prod.yml up --force-recreate -d
+```
+
+This comprehensive Docker deployment guide covers all aspects of running your Codify Backend in containerized environments, from local development to production scaling.
+
 ## API Reference
 
 ### System Health & Information
