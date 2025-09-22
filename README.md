@@ -94,7 +94,7 @@ The application is fully dockerized with different configurations for developmen
 
 ### Development with Docker
 
-For local development using Neon Local (ephemeral PostgreSQL database):
+For local development using PostgreSQL (local database):
 
 1. **Ensure Docker and Docker Compose are installed**
 
@@ -114,7 +114,7 @@ For local development using Neon Local (ephemeral PostgreSQL database):
 
    This will:
 
-   - Start Neon Local database on port 5432
+   - Start PostgreSQL database on port 5432
    - Build and start the application on port 5000
    - Mount source code for hot reloading
 
@@ -155,12 +155,12 @@ For production deployment using Neon Cloud database:
 
 ### Environment Variables Switching
 
-- **Development**: Uses `.env.development` with Neon Local connection
+- **Development**: Uses `.env.development` with PostgreSQL connection
 - **Production**: Uses `.env.production` with Neon Cloud connection
 
 The `DATABASE_URL` automatically switches between:
 
-- Dev: `postgres://postgres:postgres@neon-local:5432/postgres`
+- Dev: `postgres://postgres:postgres@db:5432/codify_dev`
 - Prod: Your Neon Cloud URL (e.g., `postgres://...neon.tech...`)
 
 ## API Reference
