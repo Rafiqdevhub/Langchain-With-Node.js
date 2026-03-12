@@ -19,11 +19,6 @@ app.use(cors({
     origin: config.corsOrigins,
     credentials: true,
 }));
-// Handle preflight requests
-app.options("*", cors({
-    origin: config.corsOrigins,
-    credentials: true,
-}));
 app.use(compression());
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
@@ -46,7 +41,7 @@ app.get("/", (req, res) => {
     res.json({
         status: "API is running",
         version: "2.0.0",
-        description: "AI-powered code review and chatbot service with Arcjet security and user authentication",
+        description: "AI-powered code review and chatbot service with user authentication",
         endpoints: [
             "/api/auth/register",
             "/api/auth/login",
@@ -59,19 +54,16 @@ app.get("/", (req, res) => {
             "/api/ai/guidelines",
         ],
         security: {
-            provider: "Arcjet",
+            provider: "Internal middleware",
             features: config.nodeEnv === "development"
                 ? [
-                    "ALL SECURITY DISABLED in development mode for unrestricted testing",
-                    "No bot detection, no rate limiting, no security shield",
-                    "Perfect for development and testing",
+                    "Security middleware pass-through enabled",
+                    "Route-specific rate limits are still active",
                     "JWT-based authentication still available",
                 ]
                 : [
-                    "Bot detection and blocking",
-                    "Security threat shield",
-                    "Dynamic rate limiting (10 requests/day per IP for guests, 100 requests/day for users)",
-                    "Real-time request analysis",
+                    "Security middleware pass-through enabled",
+                    "Route-specific rate limits are still active",
                     "JWT-based authentication",
                 ],
         },
@@ -85,7 +77,7 @@ app.get("/", (req, res) => {
             "Security vulnerability detection",
             "Code quality assessment",
             "Support for 25+ programming languages",
-            "Advanced security protection via Arcjet",
+            "JWT authentication and route-level protections",
         ],
     });
 });

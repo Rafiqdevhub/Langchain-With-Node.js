@@ -15,19 +15,13 @@ export const config = {
     secret: process.env.JWT_SECRET || "your-secret-key-change-in-production",
     expiresIn: process.env.JWT_EXPIRES_IN || "7d",
   },
-  // Arcjet Security Configuration
-  arcjet: {
-    key: process.env.ARCJET_KEY || "",
-    env: process.env.ARCJET_ENV || "development",
-    mode: process.env.ARCJET_MODE || "LIVE",
-  },
   rateLimits: {
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || "900000"),
     generalMax: parseInt(process.env.RATE_LIMIT_GENERAL_MAX || "100"),
     aiMaxProd: parseInt(process.env.RATE_LIMIT_AI_MAX_PROD || "20"),
     aiMaxDev: parseInt(process.env.RATE_LIMIT_AI_MAX_DEV || "50"),
     dailyWindowMs: parseInt(
-      process.env.RATE_LIMIT_DAILY_WINDOW_MS || "86400000"
+      process.env.RATE_LIMIT_DAILY_WINDOW_MS || "86400000",
     ),
     aiDailyMax: parseInt(process.env.RATE_LIMIT_AI_DAILY_MAX || "50"),
     // Authentication specific rate limits

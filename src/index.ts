@@ -25,7 +25,7 @@ app.use(
   cors({
     origin: config.corsOrigins,
     credentials: true,
-  })
+  }),
 );
 
 app.use(compression());
@@ -40,7 +40,7 @@ app.use((req, res, next) => {
     } catch (error) {
       console.error(
         `[${new Date().toISOString()}] Failed to parse text/plain body as JSON:`,
-        error instanceof Error ? error.message : String(error)
+        error instanceof Error ? error.message : String(error),
       );
     }
   }
@@ -57,7 +57,7 @@ app.get("/", (req, res) => {
     status: "API is running",
     version: "2.0.0",
     description:
-      "AI-powered code review and chatbot service with Arcjet security and user authentication",
+      "AI-powered code review and chatbot service with user authentication",
     endpoints: [
       "/api/auth/register",
       "/api/auth/login",
@@ -70,20 +70,17 @@ app.get("/", (req, res) => {
       "/api/ai/guidelines",
     ],
     security: {
-      provider: "Arcjet",
+      provider: "Internal middleware",
       features:
         config.nodeEnv === "development"
           ? [
-              "ALL SECURITY DISABLED in development mode for unrestricted testing",
-              "No bot detection, no rate limiting, no security shield",
-              "Perfect for development and testing",
+              "Security middleware pass-through enabled",
+              "Route-specific rate limits are still active",
               "JWT-based authentication still available",
             ]
           : [
-              "Bot detection and blocking",
-              "Security threat shield",
-              "Dynamic rate limiting (10 requests/day per IP for guests, 100 requests/day for users)",
-              "Real-time request analysis",
+              "Security middleware pass-through enabled",
+              "Route-specific rate limits are still active",
               "JWT-based authentication",
             ],
     },
@@ -97,7 +94,7 @@ app.get("/", (req, res) => {
       "Security vulnerability detection",
       "Code quality assessment",
       "Support for 25+ programming languages",
-      "Advanced security protection via Arcjet",
+      "JWT authentication and route-level protections",
     ],
   });
 });
@@ -126,7 +123,7 @@ app.use(
     err: Error,
     req: express.Request,
     res: express.Response,
-    next: express.NextFunction
+    next: express.NextFunction,
   ) => {
     const statusCode = res.statusCode !== 200 ? res.statusCode : 500;
 
@@ -138,30 +135,30 @@ app.use(
     console.error(
       `[${new Date().toISOString()}] Server error occurred:`,
       err.message,
-      statusCode
+      statusCode,
     );
 
     res.status(statusCode).json({
       error: "Server Error",
       ...errorDetails,
     });
-  }
+  },
 );
 
 const server = app.listen(config.port, () => {
   console.log(
     `[${new Date().toISOString()}] Server started successfully on port ${
       config.port
-    } (${config.nodeEnv.toUpperCase()})`
+    } (${config.nodeEnv.toUpperCase()})`,
   );
   console.log(
-    `[${new Date().toISOString()}] Server URL: http://localhost:${config.port}`
+    `[${new Date().toISOString()}] Server URL: http://localhost:${config.port}`,
   );
 });
 
 process.on("SIGTERM", () => {
   console.log(
-    `[${new Date().toISOString()}] SIGTERM signal received: closing HTTP server`
+    `[${new Date().toISOString()}] SIGTERM signal received: closing HTTP server`,
   );
   server.close(() => {
     console.log(`[${new Date().toISOString()}] HTTP server closed gracefully`);

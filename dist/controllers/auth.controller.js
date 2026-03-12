@@ -4,7 +4,6 @@ import { eq } from "drizzle-orm";
 import { db } from "../config/database.js";
 import { users } from "../models/users.model.js";
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
-// Helper function to generate JWT token
 const generateToken = (userId, email) => {
     const payload = {
         id: userId,

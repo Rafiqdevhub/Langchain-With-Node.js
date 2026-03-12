@@ -43,8 +43,6 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@arcjet/inspect": "^1.0.0-beta.11",
-    "@arcjet/node": "^1.0.0-beta.11",
     "@esbuild-kit/core-utils": "^3.3.2",
     "@esbuild-kit/esm-loader": "^2.6.5",
     "@langchain/community": "^0.3.47",
