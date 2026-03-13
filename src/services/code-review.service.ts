@@ -41,7 +41,7 @@ export interface CodeIssue {
 export function createCodeReviewService() {
   const llm = new ChatGoogleGenerativeAI({
     apiKey: config.googleApiKey,
-    model: "gemini-2.0-flash",
+    model: "gemini-3-flash-preview",
     temperature: 0.3, // Lower temperature for more consistent code analysis
   });
 
@@ -105,7 +105,7 @@ Be thorough but constructive in your feedback.`,
     async reviewCode(
       code: string,
       filename?: string,
-      threadId?: string
+      threadId?: string,
     ): Promise<CodeReviewResult> {
       const config = {
         configurable: {
@@ -152,7 +152,7 @@ Provide a comprehensive code review in the specified JSON format.`;
       } catch (error) {
         console.error(
           `[${new Date().toISOString()}] Error parsing AI response in single file review:`,
-          error instanceof Error ? error.message : String(error)
+          error instanceof Error ? error.message : String(error),
         );
       }
 
@@ -177,7 +177,7 @@ Provide a comprehensive code review in the specified JSON format.`;
 
     async reviewMultipleFiles(
       files: CodeReviewFile[],
-      threadId?: string
+      threadId?: string,
     ): Promise<CodeReviewResult> {
       const config = {
         configurable: {
@@ -193,7 +193,7 @@ Provide a comprehensive code review in the specified JSON format.`;
             })
 \`\`\`${file.language || this.detectLanguage(file.filename)}
 ${file.content}
-\`\`\``
+\`\`\``,
         )
         .join("\n\n");
 
@@ -235,7 +235,7 @@ Return your analysis in the specified JSON format.`;
       } catch (error) {
         console.error(
           `[${new Date().toISOString()}] Error parsing AI response in multi-file review:`,
-          error instanceof Error ? error.message : String(error)
+          error instanceof Error ? error.message : String(error),
         );
       }
 

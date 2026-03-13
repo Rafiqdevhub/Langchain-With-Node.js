@@ -13,7 +13,7 @@ import { config } from "../config/env.js";
 export function createChatService() {
   const llm = new ChatGoogleGenerativeAI({
     apiKey: config.googleApiKey,
-    model: "gemini-2.0-flash",
+    model: "gemini-3-flash-preview",
     temperature: 0.7,
   });
 

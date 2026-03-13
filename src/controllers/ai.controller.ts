@@ -36,7 +36,19 @@ export const chatController = {
         threadId: response.threadId,
       });
     } catch (error) {
-      return res.status(500).json({ error: "Error processing chat request" });
+      const err = error instanceof Error ? error : new Error(String(error));
+
+      console.error(
+        `[${new Date().toISOString()}] AI chat controller error:`,
+        err.message,
+      );
+
+      return res.status(500).json({
+        error: "Error processing chat request",
+        ...(process.env.NODE_ENV === "development"
+          ? { details: err.message }
+          : {}),
+      });
     }
   },
 };

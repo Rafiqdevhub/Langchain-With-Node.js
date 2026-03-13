@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { chatController } from "../controllers/ai.controller.js";
 import { codeReviewController } from "../controllers/code-review.controller.js";
-
 import { uploadMiddleware } from "../middleware/upload.middleware.js";
 
 const router = Router();
@@ -17,11 +16,11 @@ router.post(
   uploadMiddleware.array("files", 10),
   (req, res, next) => {
     Promise.resolve(codeReviewController.reviewFiles(req, res)).catch(next);
-  }
+  },
 );
 router.get("/languages", (req, res, next) => {
   Promise.resolve(codeReviewController.getSupportedLanguages(req, res)).catch(
-    next
+    next,
   );
 });
 router.get("/guidelines", (req, res, next) => {
